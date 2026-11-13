@@ -115,3 +115,21 @@ Schatz walk, 11-Jan-2012 (Aikin, STIR Futures, 2nd ed., 2012): CTD 0.25% Dec-13 
 - Special-repo version: a 2y at 4.21% financed at the contract's implied (special) repo 3.79% (GC 4.56%): `0.42% x 4.8 = 2.02%`, plus bills 4.39%, gives 6.41%/yr (1.60% per 90 days); recompute at each roll (Convexity Maven, Leverage is NOT a four-letter Word, 26 Jan 2023).
 - Target duration: USD 1bn at modified duration 3.0 to 2.0 with 5y futures (PEV USD 105,687.50, duration 4.09): `N = -1.00% x 1bn / (4.09% x 105,687.50) = -2,313` (Burghardt et al., 2005, Ch. 10).
 - Asset-manager substitutions, 5% allocations: floating CLO via sell UST + buy futures 4.8% adds 0.12% to fund yield; 1y ABS with sell 2y future adds 0.11%; high yield with a -2.1% futures hedge adds 0.17% (Treasury Borrowing Advisory Committee, Treasury Futures Positions Across Investor Types, 30 Jan 2024).
+
+## J. Wildcard exercise on an Ultra-Bond basis (BofA, Primer: US Treasury futures and basis, 10 Jul 2025)
+
+Long USD 100mm 4.75% 15-Nov-2053 against 734 short Sep-2025 Ultra-Bond futures (CF 0.7342). Gross basis 5 ticks, net basis 4. After the 3pm futures settle the market rallies 1 point.
+
+| Leg | Arithmetic | Result |
+|---|---|---|
+| Deliver now, forfeit the gross basis | 734 x 5 ticks x USD 31.25 | -USD 114,688 |
+| Sell the unhedged tail 1 point higher | USD 100mm x (1 - 0.7342) = USD 26.6mm; x 1 point | +USD 266,000 |
+| Net | | about +USD 151,000 |
+
+Test: `gross_basis x CF = 5/32 x 0.7342 = 0.1147` per 100 face against `1 point x (1 - CF) = 0.2658`: exercise. Breakeven post-close rally `0.1147 / 0.2658 = 0.43` points (13.8/32), derived from the source's rule. The option is a few hours long: each day without a large post-close move the gross basis is simply paid down by carry.
+
+## K. Sep-2025 5y basket screen and a Bond-contract scenario map (BofA, Primer: US Treasury futures and basis, 10 Jul 2025)
+
+- 5y contract, Sep-2025: 8 deliverables (29-Nov-2029 to 30-Jun-2030 maturities plus issues still to come at the end of July, August and September 2030). First delivery 2-Sep-2025, last 3-Oct-2025, GC repo used for every bond. The CTD is the Nov-2029 note at a net basis of -0.5 ticks with the highest IRR: with rates well below the 6% notional the shortest bond is CTD and the net basis is at or below zero, so the options are priced as nearly worthless.
+- Bond contract, Sep-2025, scenario screen (parallel shifts of the curve, CTD recomputed in each cell): CTD is the Nov-2043 bond. At +50bp the CTD becomes the Nov-2044 and the Nov-2043 basis moves to about 6 ticks (from 7). At +100bp the CTD becomes the Aug-2050 (the source also quotes a 61-tick basis on a longer bond in this cell; treat it as unverified because that issue is outside the Bond basket). At -50bp or more the CTD becomes the Feb-2041. A long CTD basis therefore pays like a straddle: it gains as the CTD moves away in either direction.
+- Use: read the table as the CTD-probability grid behind `P(CTD_i)` and the futures PV01 in SKILL.md section 4; a fair net basis is the probability-weighted terminal payoff over such a grid.

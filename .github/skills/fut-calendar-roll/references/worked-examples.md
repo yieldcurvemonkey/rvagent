@@ -64,3 +64,16 @@ USD 5y: $15.999bn started on the March IMM vs $13.25bn on the June IMM; naive ro
 Across tenors $101.1bn of March-to-June rolls = $73.5m DV01 naively; trade-by-trade package detection gave $39.9m DV01, 39%
 of the naive figure (about 40% of March risk was roll-related). Roll volume concentrates in the last sessions: the Friday
 before expiry is the busiest (over 21% of rolled risk), the four busiest sessions exceed 71%.
+
+## 10. Wild card and CTD scenarios (BofA, US Treasury futures and basis, 10 Jul 2025)
+- **Wild card (WNU5).** Long $100mm 4.75% 11/15/53 against short 734 WN (CF 0.7342); gross basis 5 ticks, net 4. The market
+  rallies 1 point after the 3pm settle. Delivering 734 contracts forfeits 734 x 5 x $31.25 = $114,688 of gross basis; the
+  unhedged $26.6mm tail (face x (1 - CF)) sold 1 point higher gains $266,000 (derived net +$151,312). Rule: delivery pays when
+  (cash - 3pm close) x (1 - CF) > gross basis x CF; it is a 3-hour call on (1 - CF) of the CTD, paid for with the gross basis on CF of the bond.
+  WNU5 conversion factors run from 0.43 (1.625% coupon) to 0.83 (4.75%): factors well below 1 are what give the wild card value.
+- **CTD scenarios (USU5, CTD 11/43).** +50bp: CTD becomes 11/44 and the 11/43 basis goes to about 6 ticks (from 7); +100bp: CTD
+  becomes 8/50 and the 11/53 basis is worth 61 ticks; -50bp or more: CTD becomes 2/41. The long-CTD basis pays like a straddle,
+  so a calendar whose back CTD can move this far has switch risk the carry model does not see.
+- **FVU5 basket.** 8 bonds (11/30/2029 to 6/30/2030, plus the coming 7/31, 8/31 and 9/30/30 issues, i.e. a back basket with
+  when-issued bonds); first delivery 2 Sep 2025, last 3 Oct 2025; CTD the Nov-2029 note with net basis -0.5 ticks and the
+  highest implied repo, GC repo used for every bond (so special-repo bonds are not captured).

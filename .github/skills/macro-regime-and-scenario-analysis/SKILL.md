@@ -1,6 +1,6 @@
 ---
 name: macro-regime-and-scenario-analysis
-description: 'Classifies G10 rates regimes (bull/bear steepening and flattening move types, 55-day level regimes, growth/inflation quadrants such as goldilocks and stagflation, analogue and Markov-switching states, max-vol stress switches) and builds probability-weighted scenario trees and outcome maps (soft/hard/no landing, base/bull/bear case) for curve, vol and fair-value trades. Use when a trader asks about regime, scenario, outcome map, what happens if the Fed or ECB cuts or hikes, terminal rate paths, bear steepening, bull flattening, twist, recession or reacceleration odds, analogue years, risk-off or stress switch, or whether a steepener, fly or receiver works across paths. Use for regime conditioning of any curve, swap-spread or vol RV idea. Statistical regime models (HMM, breaks): quant-regime-detection; book shock P&L: port-scenario-and-stress-testing.'
+description: 'Classifies G10 rates regimes (bull/bear steepening and flattening move types, 55-day level regimes, growth/inflation quadrants such as goldilocks and stagflation, analogue and Markov-switching states, max-vol stress switches) and builds probability-weighted scenario trees and outcome maps (soft/hard/no landing, base/bull/bear case) for curve, vol and fair-value trades. Use when a trader asks about regime, scenario, outcome map, what happens if the Fed or ECB cuts or hikes, terminal rate paths, bear steepening, bull flattening, twist, recession or reacceleration odds, analogue years, risk-off or stress switch, or whether a steepener, fly or receiver works across paths. Use for regime conditioning of any curve, swap-spread or vol RV idea. Also flow-driven stress branches (trend-follower stop-out counts, CTA duration and curve bias) and futures CTD-switch scenario grids. Statistical regime models (HMM, breaks): quant-regime-detection; book shock P&L: port-scenario-and-stress-testing.'
 ---
 
 # Macro regime and scenario analysis
@@ -34,6 +34,7 @@ share of monthly bond returns is small and that relationships break when the pol
 | Normal vol on expiries/tenors (for vol-regime gates) | `vol_surface` | daily, 1y expiry 10y tail | bp per year; ATM strikes only for gates |
 | Macro releases with vintages (inflation, growth, labour, surveys) | `macro_series` | release vintages, >= 10y for z-scores | use `pub_ts_utc`; never revised values before release |
 | FX spot and forward points (FX-hedged and USD regimes) | `fx_rates` | daily | needed for hedged cross-market regimes |
+| Futures settlement prices (trend-follower replica, CTD scenarios) and deliverable baskets | `fut_quotes`, `fut_basket` | daily, >= 15y for stop-out counts | settle prices only; one continuous series per market, roll-adjusted |
 | Positioning and surveys | `positioning` | weekly (CFTC, Tuesday as-of) | a crowding gate, not a regime label |
 | Cross-asset gauges: equity index, equity vol, oil, credit spreads, financial conditions | `macro_series` (`<CC>-EQ-<INDEX>-TR`, `<CC>-EQVOL-<INDEX>-<TENOR>`, `GL-BRENT-M1`, `<CC>-CREDIT-<GRADE>-OAS`, `<CC>-FCI`) | daily, >= 5y | if the adapter has none, treat as a gap and ask for a daily series |
 
@@ -128,6 +129,14 @@ series whose history is shorter than the window you need.
    - probability-weight it, and decompose the view with `scenario_summary()`: duration impact = with-view minus viewless
      expected return = -D * mean(dy)/100, with D the horizon-end duration (not the starting duration); convexity value = viewless minus zero-vol return;
    - when news rules scenarios out, renormalise the survivors with `collapse_probs()`; do not re-weight by hand;
+   - reset the trading range from the survivors: top = the 10y level of the best-fitting surviving scenario, bottom =
+     the midpoint between that level and the hard-landing level. In Aug 2024 (soft landing about 4-4.25%, hard landing
+     about 3%) this gave 3.5-4.25% (BofA, 10y rates and the Monty Hall problem, 6 Aug 2024). A move below the bottom
+     needs conviction that the hard landing is the baseline;
+   - estimate the likelihoods from market data rather than opinion: hard landing from the option-implied distribution of
+     the 10y rate at the horizon plus the share of bull-steepening days in 2s10s; soft landing from the 10y breakeven
+     dynamic (bull tightening = slowdown, bear widening = expansion; 60-65% slowdown vs 30-35% expansion in the source).
+     The source does not give its windows, so state yours;
    - pick the structure with the best worst-case over the paths you judge plausible, or the one that is positive in the
      most of them (the source's robust-across-paths method), and state which scenario kills it.
 
@@ -152,6 +161,38 @@ series whose history is shorter than the window you need.
       Securities); treat it as a gate, not a trigger;
     - equity beta: about 2.5bp of yield change per 1% SPX on a three-month regression with R-squared 0.18, so a
       scenario based on equities is a rough mapping only.
+
+12. **Flow branch (trend-follower stop-outs).** Positioning is a crowding gate, but a stretched book that is aligned
+    across lookbacks adds its own stress branch: the biggest flows come from stop-out unwinds, not from accumulation
+    (BofA, More CTA Models = Better Impact Estimates, 2 Jun 2025). Build a proxy:
+    - 12 replica models = 3 lookbacks x 4 stop-loss thresholds on a cross-asset futures universe (equity index, sovereign
+      bond, rate, commodity, FX), risk-parity sizing. Trend signal = a set of moving-average crosses: short = 21 to 100
+      trading days, long = 50 to 252, medium = equal weight of both. A stop exits the whole position after a prescribed loss
+      from its high-water mark. The source does not give the four thresholds; calibrate them to the index you track;
+    - sigma move = daily return / prior-day EWMA volatility (lambda 0.97, de-annualised); count the models stopped out per
+      day;
+    - rule: on days when 4 or more of the 12 models stopped out, the absolute sigma move exceeded its full-sample average
+      and the move usually went beyond the trigger levels, in 10y Treasury and Bund futures as well as equities,
+      crude, gold and FX (2010 to May 2025). Three stop-outs is not reliable;
+    - risk is greatest when the short, medium and long models are similarly positioned and stretched. Diagnostic: the
+      average pairwise EWMA correlation among the three models; a low reading means dispersed positioning and less
+      unwind risk;
+    - add a flow-unwind branch to the scenario tree with the stop-out count and ask whether the structure is short
+      convexity in it. Not every stress day is flow: among the 15 largest one-day equity declines since 2010, the 2011 downgrade,
+      Covid and April 2025 episodes were fundamental, not stop-driven. The replica is a proxy (real funds differ in universe, speed and stop aggressiveness) and the
+      index it tracks has survivorship bias.
+    - Rates positioning read: from a rolling 2-month regression on one principal component per asset set, the long-
+      duration beta is the duration bias and long-duration minus short-duration beta is the curve bias (long the long
+      feature, short the short feature = flattener) (BofA, CTAs impact on the rates market, 18 Aug 2020). Details in
+      `references/scenario_examples.md`, section 10.
+
+13. **Futures-hedged or futures-based positions: name the CTD per scenario.** A conversion factor prices the bond at a
+    6% yield, so below 6% low-duration bonds tend to be cheapest to deliver (CTD) and above 6% high-duration bonds; an
+    upward-sloping basket favours the longest bond, an inverted one the shortest. The futures therefore shorten in
+    rallies and lengthen in sell-offs: lower convexity than cash, possibly negative (BofA, Primer: US Treasury futures
+    and basis, 10 Jul 2025). Price each scenario with the CTD that scenario produces, not today's. A long CTD basis pays
+    like a straddle across the grid. Worked grid and the wild-card rule: `references/scenario_examples.md`, section 11;
+    method detail in [fut-ctd-switch-and-delivery-options](../fut-ctd-switch-and-delivery-options/SKILL.md).
 
 G10 differences matter at every step. The reaction function, the energy weight in CPI, the funding plumbing and
 the positioning differ by market. See [`references/g10_regime_notes.md`](references/g10_regime_notes.md) for the
@@ -212,6 +253,9 @@ threshold as a default to test in your own sample, not a constant.
   to 100 (Merrill Lynch RateLab, Oct 2008). Use it for long-gamma timing, with the data and not the level as the trigger.
 - Stock-bond correlation: core CPI below about 2.5% = duration hedges equities; above it, the hedge fails (Willer and
   Saunders, 2026).
+- Recession gauge: a Sahm-rule reading near 0.53 (Aug 2024) sat at the level that has historically coincided with
+  recessions; early hard-landing data can still look like a soft landing, so lean the range toward lower yields rather
+  than calling a hard landing outright (BofA, Monty Hall, 6 Aug 2024).
 - Repricing type: ask where the move happened (front, belly, long end), how (parallel, twist, belly vs wings) and why
   (policy path, growth/inflation, term premium/supply/positioning). A front-end move is meeting risk; a belly move is
   uncertainty; a long-end move is term premium (GMM, STIR application process, Feb 2026).
@@ -299,6 +343,8 @@ Return one set of tables per question, with the data gaps listed first.
 - [macro-geopolitical-risk](../macro-geopolitical-risk/SKILL.md): constraints-based shocks for the stress scenarios.
 - [quant-regime-detection](../quant-regime-detection/SKILL.md): HMM and change-point methods in more depth than step 5.
 - [quant-systematic-rates-signals](../quant-systematic-rates-signals/SKILL.md): rule-based duration and curve signals to condition on regimes.
+- [flow-positioning-cftc-and-surveys](../flow-positioning-cftc-and-surveys/SKILL.md): the weekly positioning check on the flow branch in step 12.
+- [fut-ctd-switch-and-delivery-options](../fut-ctd-switch-and-delivery-options/SKILL.md): CTD-switch mechanics behind step 13.
 - [stir-policy-pricing-whats-priced-in](../stir-policy-pricing-whats-priced-in/SKILL.md): what the market already prices, to compare with each scenario.
 - [stir-options-implied-distributions](../stir-options-implied-distributions/SKILL.md): option-implied path distributions for bimodal or skewed scenario weights.
 - [curve-forward-grid-rv](../curve-forward-grid-rv/SKILL.md): forward-space (1y1y, 5y5y, 1y-forward fly) trades whose fair value is regime-conditional.
@@ -316,7 +362,7 @@ Return one set of tables per question, with the data gaps listed first.
 - Hamilton, James D. - *Time Series Analysis* (Princeton University Press, 1994): Markov-switching filter, smoother, EM, durations, GNP example.
 - Braizinha, Bruno - *US Rates Viewpoint: Understanding the yield curve dynamic* (BofA Global Research, 23 Jul 2025): move-type shares, Fed footprint, tail proxies, conviction, macro fair value.
 - Braizinha, Bruno, Craig, Katie - *US Rates Watch: Monthly rates models: August '25 edition* (BofA Global Research, 4 Aug 2025): four-scenario outcome map, factor momentum, directionality likelihoods.
-- Braizinha, Bruno - *US Rates Watch: 10y rates and the Monty Hall problem* (BofA Global Research, 6 Aug 2024): four-door scenario grid, market-implied likelihoods, Bayesian collapse.
+- Braizinha, Bruno - *US Rates Watch: 10y rates and the Monty Hall problem* (BofA Global Research, 6 Aug 2024): four-door scenario grid, market-implied likelihoods, Bayesian collapse, range reset.
 - Braizinha, Bruno - *US Rates Viewpoint: Introducing a new UST macro framework* (BofA Global Research, 15 Oct 2024): dynamic-factor macro fair value, residual z-scores.
 - Saunders, Alexander and Willer, Dirk - *Global Macro Strategy: Quantitative Framework for Regime Investing* (Citi Research, 29 Oct 2021): quadrants, kNN analogues, backtest conventions.
 - Willer, Dirk and Saunders, Alex - *Trading Global Macro Markets* (Wiley Finance, 2026): 55-day regime method, max-vol switch, cycle dating, inversion statistics, stock-bond correlation rule.
@@ -331,6 +377,9 @@ Return one set of tables per question, with the data gaps listed first.
 - Merrill Lynch US Rates Strategy - *RateLab: Implied Volatility: A Measurement of Fear* (7 Oct 2008): MOVE range and low-vol boundary.
 - Citi Research - *Quantitative Global Macro Strategy, QIS Corner: Aggregate commodity regime indicators* (20 Aug 2026): volatility-dispersion 2x2 and centroid table (rates transfer is an extrapolation).
 - Nordea Markets - *EUR rates: Pushing back* (17 Jan 2024): policy-path scenarios, end point over timing.
+- Axel, Ralph - *US Rates: Primer: US Treasury futures and basis* (BofA Global Research, 10 Jul 2025): CTD regime by yield level and basket slope, futures convexity, wild-card rule, basis scenario grid.
+- Braizinha, Bruno - *US Rates: CTAs impact on the rates market* (BofA Securities, 18 Aug 2020): rolling principal-component replication of trend-follower positioning, duration and curve bias.
+- Kotecha, Chintan, Dunne, Nicholas, Saksena, Nitin, Welty, Matthew, Bowler, Benjamin, Deb, Abhinandan, Naeckter, Lars - *Systematic Flows Monitor: More CTA Models = Better Impact Estimates* (BofA Global Research, 2 Jun 2025): 12-model trend-follower replica, stop-out count rule, consensus diagnostic.
 - Capleton, Mark, Swiber, Meghan - *Global Rates Viewpoint: Welcome to the real world: Global inflation-linked primer* (BofA Global Research, 22 Jul 2025): real-yield and breakeven regime matrix, owning a linker is not owning inflation.
 - J.P. Morgan North America Fixed Income Strategy - *US Treasury Market Daily: Canary in a coal mine* (25 Feb 2020): curve directionality regression and "one day does not make a trend".
 - J.P. Morgan Global Markets Strategy - *Monthly Inflation Outlook: A mixed bag of inflation market views* (13 Aug 2026): 5y5y CPI-to-Brent regression split by regime.

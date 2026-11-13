@@ -131,3 +131,43 @@ Mechanics and the full model belong to the spread skill (see Related skills).
 - Kim-Wright survey-anchored model (Willer and Saunders, 2026): top quintile of one-month TP rises (more than +10bp in
   a month) gave US equity information ratios of -0.20, against +0.46 to +0.92 in the other quintiles. A 10y
   real-yield rise above +14bp a month was relatively consistently negative for equities since late 2014.
+
+## 13. Debt-limit resolution analogs (BofA, Funding & debt limit: history lessons, 27 Jun 2025)
+
+Method. (1) Choose episodes whose state matches today: limited excess liquidity left in ON RRP and a similar percentage
+growth in expected bill and total marketable supply. The 2017 and 2018 resolutions were five months apart, so they count
+as one long episode; 2019 is a separate funding-stress analog. The 2021 and 2023 episodes had far more ON RRP liquidity
+and are not comparable. (2) Measure the average change over 1, 3 and 6 months after resolution, using a 1-month
+moving average over each window. Mechanics: before the X-date the TGA is run down while net issuance is frozen, so cash
+is plentiful; after resolution the TGA rebuild drains cash while mostly bills are issued.
+
+Average change after resolution, in bp, in this skill's signs (SOFR minus FF, SOFR minus IORB, bill minus OIS; positive
+means higher SOFR or a cheaper bill). The source printed FF less SOFR and OIS less bill, so its signs are the reverse.
+
+| Indicator | 1m | 3m | 6m | Episode detail (1m / 3m / 6m) |
+|---|---|---|---|---|
+| SOFR - FF | +7.7 | +4.4 | +5.1 | 2017: -1.9 / +0.4 / +9.6; 2018: +10.0 / +11.7 / +7.7; 2019: +14.8 / +1.0 / -2.1 |
+| SOFR - IORB | +3.0 | +5.1 | +5.7 | 2017: -2.0 / +0.7 / +11.2; 2018: +10.5 / +15.0 / +12.4; 2019: +0.7 / -0.5 / -6.4 |
+| 1m bill - OIS | +7.5 | +4.0 | +9.3 | average only |
+| 3m bill - OIS | +3.6 | +1.5 | +4.2 | average only |
+| 2y UST-OIS | 0.5 | -0.8 | 3.5 | as printed (sign not normalised) |
+| 5y UST-OIS | -0.1 | 0.2 | 3.3 | as printed (sign not normalised) |
+
+The source labels the UST-OIS rows as OIS less UST yet describes the effect as Treasuries biased cheaper, so confirm the
+sign in `swap_spreads` before using them directionally. The magnitudes are the point: under 1bp at 1 and 3 months and
+about 3bp at 6 months, against 2-9bp in the funding rows. The 2019 3m and 6m figures are distorted by the Fed's
+intervention after the Sept 2019 repo spike. Check: the SOFR-IORB average at 3m is (0.7 + 15.0 - 0.5) / 3 = 5.07, which
+rounds to the printed 5.1; allow 0.1bp from rounding.
+
+Supply conditioning, percent change in the six months before to after resolution (1m / 3m / 6m):
+
+| Episode | Bills outstanding | Total marketable debt | ON RRP ($bn) |
+|---|---|---|---|
+| 2017 | +1 / +8 / +29 | - | 96 (1m before) to 120 (1m after) |
+| 2019 | +4 / +3 / +5 | - | near 0 |
+| 2023 | +11 / +25 / +49 | - | 2,218 to 1,910 |
+| 2025 projection | +6 / +6 / +2 | +2 / +4 / +5 | 143 to 80 (1m); 138 to 0 (3m) |
+
+Bills outstanding were about $5.8-6.5tn in 2025. Reading: the 2017-19 set was used because its ON RRP buffer and
+bill-supply growth were closest to the 2025 projection; 2023 had a far larger buffer and a much larger bill surge. Hand
+off front-end trade construction to the money-market skill (see Related skills).

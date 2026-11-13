@@ -151,6 +151,9 @@ Run in order, and stop when the answer is clear.
 - **Financing waterfall.** `borrowing need = deficit + other adjustments + change in TGA`;
   `net coupons = gross coupons - public coupon maturities - buybacks`; `net bills = borrowing need - net coupons`.
   Bill share = bills / marketable debt. Worked FY26 example in [worked-examples](references/worked-examples.md), section 5.
+  A TGA rebuild after a debt-limit resolution enters through the TGA term and is financed mostly in bills: bills
+  outstanding rose 29% (2017) and 49% (2023) in the six months after resolution, against a projected 2% in 2025 (BofA,
+  Funding & debt limit: history lessons, 27 Jun 2025).
 - **Bill share bands.** TBAC's guidance was a bill share of about 20% over time, with 15% as the lower bound for
   market functioning. Since 1980 the average has been about 22.5%. BofA's 2025 tolerance was 25% (prior ceiling 22.5%),
   about one standard deviation above the post-2000 average (BofA, 2 Jul 2025). Conks called 30% or more "pushing it" (Conks, Great
@@ -196,6 +199,11 @@ Run in order, and stop when the answer is clear.
   Quantitative Global Macro, 14 Aug 2026). "Widened" here means the long-end spread moved toward zero as the long
   end strengthened and fiscal tail risk was priced out, so Treasuries richened. Use as a prior. Event windows and
   small-sample caveats are in [market-and-event-notes](references/market-and-event-notes.md).
+- **Pick analogs by state, not by label.** Match episodes on the variables that drive the response (for a debt-limit
+  resolution: the remaining ON RRP buffer and the percentage growth in bill and total marketable supply), then average the
+  1, 3 and 6-month changes using a 1-month average over each window. Treat resolutions less than six months apart as one
+  episode, and drop episodes with a far larger liquidity buffer (BofA, Funding & debt limit: history lessons, 27 Jun
+  2025). Worked case in [worked-examples](references/worked-examples.md), section 13.
 - Catalysts stack: a refunding the day after an election, or a cut to long-end sizes in favour of bills, moves
   spreads further toward zero (Treasuries richen) as supply falls.
 
@@ -254,7 +262,10 @@ These are the anchors. Full ledger in [worked-examples](references/worked-exampl
   (J.P. Morgan, FX Markets Weekly, 21 Aug 2026).
 - **Announcement half-life.** Measure it (about one day in Aug 2026) before trading an announcement.
 - **Debt-limit and bill-cut timing.** Bill-supply cuts and resolution rebuilds move bills and repo, not the long end.
-  Use stir-bills-and-money-market-spreads.
+  After the 2017-19 resolutions the average 2y and 5y UST-OIS change was under 1bp at 1 and 3 months and about 3bp at 6
+  months, against averages of about 2-9bp in SOFR-FF, SOFR-IORB and bill-OIS (BofA, Funding & debt limit: history
+  lessons, 27 Jun 2025; table and sign normalisation in [worked-examples](references/worked-examples.md), section 13).
+  Use stir-bills-and-money-market-spreads for the front-end trade.
 - **Model residuals move with regulation.** Big residuals appeared at regulatory shifts (2015, 2020). Regulation can
   outweigh supply for long periods (TBAC, Feb 2021).
 - **Event priors are small-sample.** Five lost trifectas, one to three held. Effects fade within about a month.
@@ -331,6 +342,7 @@ Do not output a trade without a stated premium range, an identifying assumption 
 - J.P. Morgan - US Weekly Prospects and FX Markets Weekly, Currencies amid long-end UST shenanigans (both 21 Aug 2026): credit-demand rule, regime vs USD, not-QE reading, debasement gate.
 - Financial Times - US long-term bonds slide as Treasury secretary Bessent's intervention fails to soothe investors (20 Aug 2026): buyback half-life and 30y reversal.
 - Wall Street Journal (Opinion) - Let the Bond Market Speak (Stanley Druckenmiller, 24 Aug 2026): buyback as price management and signal versus plumbing.
+- BofA Global Research - US Rates Watch: Funding & debt limit: history lessons (Mark Cabana, Katie Craig, 27 Jun 2025): state-matched analog method, post-resolution changes in funding spreads and 2y-5y UST-OIS, bill-supply growth around debt-limit episodes.
 - BofA Global Research - US Rates Watch: Bills: policy and supply uncertainty = cheaper (1 Oct 2026): 3-6m bill term-premium-like concession.
 - Conks (Substack) - The Great Rebalancing (16 Jul 2025): bill-share tolerance and the war on long-end supply.
 - Christian Dunis, Jason Laws and Patrick Naim (eds) - Applied Quantitative Methods for Trading and Investment (Wiley, 2003), Ch. 3 (Cassola and Luis): forward-regression test of the expectations hypothesis on the Bund curve.

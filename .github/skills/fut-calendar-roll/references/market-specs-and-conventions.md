@@ -18,6 +18,23 @@ starting point and read the current exchange specification from `fut_static` / `
 Conflicts to verify: JGB basket range (7-11y vs 7-10.5y); first notice rule (2004 vs 2026); wildcard interval (one
 vendor guide states 6 and 15 hours).
 
+## US Treasury futures specification (BofA, US Treasury futures and basis, 10 Jul 2025)
+
+| Contract | Face | Deliverable remaining maturity | Original maturity | Tick |
+|---|---|---|---|---|
+| TU | $200k | 1 3/4-2y | <= 5 1/4y | 1/8 of 32nd = $7.8125 |
+| FV | $100k | 4 1/6-5 1/4y | <= 5 1/4y | 1/4 of 32nd = $7.8125 |
+| TY | $100k | 6 1/2-8y | none | 1/2 of 32nd = $15.625 |
+| UXY | $100k | 9 5/12-10y | <= 10y | 1/2 of 32nd = $15.625 |
+| US | $100k | 15-25y | none | 1/32 = $31.25 |
+| WN | $100k | 25-30y | none | 1/32 = $31.25 |
+
+- Last trade: last business day of the delivery month for TU and FV; 7 business days before the last business day for the others.
+  Last delivery: 3rd business day after last trade for TU and FV; last business day of the delivery month for the others.
+- FV needs original maturity <= 5y3m and remaining maturity >= 4y2m on the first day of the delivery month, so only original-issue 5y notes are deliverable.
+- Compare open interest in notional or risk-weighted terms, not contract counts: FV open interest about 7mm contracts (about $700bn), TU 4.3mm contracts but about $900bn because TU is double-sized. Futures volume in 2023 was about $645bn per day vs about $460bn per day of primary-dealer cash trading.
+- Quote the roll in ticks of the contract (a TU tick is a quarter of an FV tick in price); convert to 32nds before comparing across contracts. Re-check the current rules in `fut_static`: this table is a mid-2025 snapshot.
+
 ## Cash-settled bond futures (AUD)
 
 Settlement value per contract, with notional 6% semi-annual 10y bond: `Value = 1000 x [ (C/2) x (1 - (1 + R/200)^-20) / (R/200) + 100 x (1 + R/200)^-20 ]`,

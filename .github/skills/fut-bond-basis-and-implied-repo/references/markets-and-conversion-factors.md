@@ -59,6 +59,24 @@ exchange notice before use; `fut_static` is the source of truth in the agent.
 | AUD (ASX) | 6% | cash settled | none | EDSP = 100 - 100 x sum(w_i y_i) with fixed weights over a basket of yields: no CTD, no CF, no IRR (Düring, 2021). Use only the replacement and funding sections. |
 | NZD, NOK | n/a | n/a | n/a | No liquid physically settled government bond future in the data contract and no source read. Skip. |
 
+### 2b. USD contract specification table (BofA, Primer, 10 Jul 2025)
+
+| Contract | Face | Deliverable remaining maturity | Original maturity | Minimum tick |
+|---|---|---|---|---|
+| TU (2y) | USD 200k | 1 3/4 to 2y | at most 5 1/4y | 1/8 of 32nd = USD 7.8125 |
+| FV (5y) | USD 100k | 4 1/6 to 5 1/4y | at most 5 1/4y | 1/4 of 32nd = USD 7.8125 |
+| TY (10y) | USD 100k | 6 1/2 to 8y | none | 1/2 of 32nd = USD 15.625 |
+| UXY (Ultra-10y) | USD 100k | 9 5/12 to 10y | at most 10y | 1/2 of 32nd = USD 15.625 |
+| US (Bond) | USD 100k | 15 to 25y | none | 1/32 = USD 31.25 |
+| WN (Ultra-Bond) | USD 100k | 25 to 30y | none | 1/32 = USD 31.25 |
+
+- Last trade date: last business day of the delivery month for TU and FV; 7 business days before the last business day for the others.
+  Last delivery date: third business day after the last trade date for TU and FV; last business day of the delivery month for the others.
+- FV needs original maturity of at most 5y3m and remaining maturity of at least 4y2m on the first day of the delivery month, so only original-issue 5y notes are deliverable.
+- Scale (2023-25 sources): FV open interest about 7mm contracts (about USD 700bn); TU about 4.3mm contracts, about USD 900bn notional because of the double face.
+  Futures volume was about USD 645bn per day in 2023 against about USD 460bn per day of primary-dealer cash trading.
+- The Sep-2025 Ultra-Bond basket had CFs from 0.43 (1.625% coupon) to 0.83 (4.75%): factors well below 1 are what give the wildcard its value.
+
 ## 3. Quoting units
 
 - Prices are decimal in the data contract. 32nds text is never stored. Convert: `ticks = decimal x 32` for the US bond contracts.

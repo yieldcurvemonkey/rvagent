@@ -197,3 +197,177 @@ equal-weighted long portfolio 0.05; bull/bear-month IR 1.10/0.41. Replacing the 
 J.P. Morgan's updates also run rule-based 3Mx10Y EUR gamma signals (vol momentum, risk-adjusted-carry percentile,
 PMI shock, liquidity; combined IR 2.5 since 2000 vs 1.0 always-short; fading implied-vol extremes alone IR -0.3).
 Those belong in `vol-rates-options-rv`.
+
+## 10. Trend rules and event studies on a bond index
+
+Source: BofA Global Research, Technicals Explained primer (Ciana, Suttmeier, 14 Jan 2025). Sign convention: a golden
+cross on a bond future price means lower yields (+ long duration); on a yield series it is the reverse. Build the
+rule on the return index.
+
+**Moving-average signals.** Four generic readings: price crosses the MA, the MA slope turns, a short MA crosses a
+long one, price is far from the MA relative to its history. A fan of 20/50/100/150/200d averages gives 20 conditions;
+a dispersed fan means a strong trend. The EMA stays closer to price and signals earlier than the SMA. The primer's
+rule of thumb: rates mean-revert more often, commodities trend longer, equity indices drift up (no rates test is
+given for the claim).
+
+**Golden/death-cross event study (method).** For each signal, take the forward % change at 5-80 trading days, with
+up/down counts, mean, median, min and max, and repeat conditioned on the 200d SMA slope. Verdict in the primer:
+good for context, not necessarily entry and exit.
+
+| Market and signal | Signals | Forward result |
+|---|---|---|
+| US long bond future, golden cross (since 1977) | 34 | higher 68% at 40-50d (23 of 34 per the table; the text says 31), average +1.44% at 45d |
+| Same, with a rising 200d | 14 | higher 12 of 14 (86%) at 45-50d, average +2.49% at 45d and +2.54% at 50d; min/max at 45d -5.10% / +13.42% |
+| Same, death cross | 34 | little relevance, down ratios 36-53% |
+| Oil, golden cross with a rising 200d | n/a | bearish for the first 10d (up only 20-33%); with a falling 200d up 81% at 5d |
+
+The oil row is the warning: conditioning on the 200d slope changed the sign of the result. Conditioned samples are
+often 14-17 signals.
+
+**Triple-MA score (TMAC, 10/20/30d).** 9 conditions: price vs each MA (3), each MA vs the others (3), slope of each
+MA (3). The sum runs -9..+9. Example rule sets from the primer (no performance reported):
+- long when the sum is above 0, short when below 0;
+- buy at +9, add on down days that do not reduce the sum, reduce at 6, exit at 3 (mirror at -9/-6/-3);
+- scale in by thirds at >=3, >=6 and =9, and scale out at 5, 2 and 0 (mirror for shorts).
+
+Filter: trade only when the 200d slope agrees; less-trending markets may need a profit-target exit.
+
+**Weekly MA trend states (13/26/40/200-week).** Slope matters more than the side of the MA. Bullish: close above a
+rising MA (buy dips). Bullish-at-risk: close below a rising MA. Bearish: close below a falling MA (sell rallies).
+Bearish-at-risk: close above a falling MA. Trends are strongest when all timeframes agree. The primer notes that
+tops and bottoms in a relative (ratio) series often lead those in the absolute series, which carries to spread and
+fly series.
+
+**ADX regime classifier.** +DMI above -DMI means rising. ADX below 20 = range, 20-25 = transition, above 25 = trend.
+ADXR is a moving average of ADX: a trend starts when ADX crosses above ADXR from below 20, and ends when a high ADX
+(about 40) crosses below it.
+
+**ATR and stops.** True range = max(H-L, |H - prev close|, |L - prev close|); ATR = simple or exponential average of it
+(14 periods is the usual default). Trailing stops: long = prior low minus ATR, short = prior high plus ATR. A
+trend-line break is confirmed by a close at least 1% beyond the line, above-average volume, consecutive closes
+beyond it, failed retests on light volume, or a break larger than the ATR. Scale in and out by thirds.
+
+## 11. Trend-follower replication and stop-out risk
+
+**Bottom-up ensemble (BofA, Systematic Flows Monitor, 2 Jun 2025).**
+
+| Parameter | Choice that tracked a CTA index best | Variants run |
+|---|---|---|
+| Universe | broad cross-asset futures (equity index, sovereign bond, interest rate, commodity, currency) | n/a |
+| Trend lookback | medium = equal weight of short (MA crosses of 21 to 100d) and long (50 to 252d) | 3: short, medium, long |
+| Sizing | risk parity; allocation published as a z-score, maximum 10% per asset | n/a |
+| Risk management | moderately aggressive stop from the high-water mark, flattening the position | 4 stop levels (values not published) |
+
+- 12 models = 3 lookbacks x 4 stops. Over the long run the stop level barely changes performance, because stops are
+  rarely hit and positions unwind anyway as the trend reverses.
+- Sigma move = daily return / prior day's prevailing realised vol (EWMA, lambda 0.97, de-annualised). Correlations
+  to the benchmark are EWMA with lambda 0.97 (data 1999-2025).
+- Consensus diagnostic: the average pairwise EWMA correlation among the short, medium and long models; low means
+  dispersed positioning.
+- Projection: bear / median / bull = 2.5th / 50th / 97.5th percentile of historical 5-day return paths at current
+  vol; list a model's unwind trigger only if it lies inside the forecast path.
+- Evidence: 9 of the 15 largest one-day sigma declines in S&P futures since 2010 coincided with stop-loss unwinds
+  (the exceptions were fundamental stress such as Covid). On days with 4 or more of 12 models stopping out, the
+  absolute sigma move exceeded the full-sample average. The same monotone pattern (more stops, larger absolute move)
+  is shown for 10y Treasury and Bund futures and other markets over 2010 to May 2025. The 4-of-12 threshold itself
+  was stated for the equity index; 3 stop-outs came with large moves but not reliably.
+- Validation: of 14 US-listed managed-futures funds with correlation to the index of at least 0.7, each correlated at
+  least 0.68 with one of the models and 10 were closest to the medium-term model. The short-term model was the
+  closest tracker before 2013-14 and the long-term model has been more stable since, a sign that CTAs lengthened
+  their trend horizon.
+- Reading: risk is greatest when all three lookbacks are similarly positioned and stretched. Flows from unwinds can
+  exceed flows from accumulation. Single-parameter models miss dispersion; the medium model alone may do for
+  monitoring and consensus across all gives conviction. Real CTAs differ in universe, lookback, risk target and stop
+  aggressiveness.
+
+**Top-down regression (BofA, CTAs impact on the rates market, 18 Aug 2020).**
+1. Target: an equal-weighted index of 20 large CTAs open to new investment (it has survivorship bias).
+2. Pick representative assets per group by hierarchical clustering. Groups: equities, longer-duration bonds,
+   shorter-duration bonds, metals, energy, FX. Broad benchmarks were rejected: too broad, rebalancing rules interfere,
+   long/short bias is hidden.
+3. Take only the first principal component of each group as the feature (higher eigenvectors are unstable and would
+   destabilise the betas; low dimension reacts faster).
+4. Rolling OLS of index returns on the 6 features over a 2-month window (fast response, limited noise). Project the
+   betas back to single assets through the inverse PC1 transform. Replacing the FX feature with the dollar index
+   gave average R^2 of 66% on 2-month windows since 2015 and was kept.
+5. Read the rates view: the long-duration beta is the duration bias; the long-duration beta against the short-duration
+   beta is the curve bias (long the long-duration feature and short the short-duration one = flattener). Long-duration
+   betas are more stable; short-duration betas are volatile and follow the policy path. The flow signal is the
+   week-on-week change in betas; duration is first order, curve second order. Z-score the betas against their average
+   3-month level; a breadth index reaches +/-1 when all assets are over/underweight at 1.5 sigma.
+6. Validation: the betas correlate significantly with a multi-crossover momentum signal for equities, the 10y
+   Treasury and crude (lower for gold, lowest for the dollar), with a lead/lag of about 15-20 days at peak
+   correlation. The 10y Treasury beta trend correlated about 60% with net non-reportable futures positions (other
+   reportables 20%), but levels and long/short implications did not match.
+
+Track record of the read (Aug 2020 note): 2016 long duration plus flatteners, shifting to steepeners after the
+election; 2019 flattening bias (neutral-rate downgrade); betas decayed in the 1Q20 dash for cash, which supports the
+2-month window. At publication: long-duration bias since February, last meaningful build the week of 10 July,
+trimmed from early August; curve bias switched from bull steepening to slight flattening in late March, peaking on
+24 July.
+
+## 12. Cross-sectional scorecards and positioning proxies (FX evidence)
+
+Source: BofA Merrill Lynch, FX Quant Primer (Iaralov, Leng, Vamvakidis, 1 Oct 2018). Universe: 10 G10 currencies,
+weekly portfolios opened Monday 5pm New York and closed the next Monday, hypothetical and gross of costs. The rates
+reader should take the construction, not the numbers. The authors also flag that factor relationships broke in 2011,
+2013 and 2017, so recheck stability before use.
+
+**Rank-to-score tables** (values for ranks 1 to 10, rank 1 = most favourable):
+
+| Factor | Scores |
+|---|---|
+| Equity momentum | 4, 4, 2, 2, 0, 0, -2, -2, -4, -4 |
+| Carry level | 4, 3, 3, 0, 0, 0, 0, -3, -3, -4 |
+| Rates momentum | 3, 2, 1, 0, 0, 0, 0, -1, -2, -3 |
+| Contrarian value | 2, 1, 0, 0, 0, 0, 0, 0, -1, -2 |
+
+z-scores use a 1y window, `z = (x - mean) / s` with `s` the sample standard deviation (n - 1).
+
+**Averaged scorecard (OCTAVE, live since 2012).** Rank = sum over 4 factors of (z + scorecard value), long the top 3
+and short the bottom 3. Factors: carry level (swap-rate level), 2-month rates momentum (8-week % change in swap
+rates), 2-month equity momentum (8-week % change), 2-month contrarian value (44-day average FX / spot, used only
+when |z| > 1). Two of four factors are rates, so it works best when rates drive FX.
+
+**Two-step filter sort (FORTE, live since 2014).** Step 1: rank on 12-month equity momentum, equity scorecard 3, 2, 1,
+0.5, 0, 0, -0.5, -1, -2, -3. Step 2: re-sort the top-4 and bottom-4 baskets separately by filter score = equity
+scorecard + z(carry level) + z(1-week rates momentum) + z(15-day average FX / spot). Long the 2 highest filter scores
+in the top basket, short the 2 lowest in the bottom basket, ranks 5-6 neutral. The model can never sell a currency
+with strong equities or buy one with weak equities. The authors call it non-parametric (two sorts, not a weighted
+average).
+
+| Model | Since inception | Last 12m | Long signals above funding |
+|---|---|---|---|
+| OCTAVE | 343 portfolios, 52.8% hit | 52 portfolios, 50.0% | 1.56 of 3 (12m 1.46) |
+| FORTE | 237 portfolios, 54.0% hit | 52 portfolios, 53.8% | 1.03 of 2 (12m 1.00) |
+
+Hit ratio = share of weekly portfolios with a positive combined long-short return. "Long signals above funding" =
+number of long legs whose period change beats the equal-weighted basket of the shorts.
+
+**Factor sensitivity.** Correlating the cross-sectional ranking of FX returns with each factor's ranking, equities
+come first, then rates, terms of trade, inflation and unemployment. Rates peak at a horizon of about 2 months (average
+about 40%); equities peak at 6 months (about 55%, currently about 47%). Factors show up at the
+extremes (high against low), not pairwise.
+
+**Moving-average aggregator (MAA).** Spot and its 5/10/20/30/50/100/200d averages give 8 series and C(8,2) = 28
+pairwise comparisons; MAA is the % of pairs that are bullish (100% = all 28, 50% = 14). Uptrend if above 60,
+downtrend if below 40. Breadth versions add +1 per pair in uptrend and -1 in downtrend across a currency group.
+
+**Up/down vol.** Raw U/D = 100 - 100 / (1 + UP/DOWN), UP and DOWN being realised vol on up and down days over a common
+rolling month; UD% = 100% - the 1y percentile of Raw U/D. Read with MAA: reversal likely when MAA and UD are above 80
+in an uptrend (below 20 in a downtrend), unlikely when UD is below 50 in an uptrend (above 50 in a downtrend).
+
+| Condition (G10 FX, one week ahead; vol direction per the UD measure) | Outcome |
+|---|---|
+| Extended uptrend (MAA above 60) | gains strength only about 44% of the time |
+| Extended downtrend (MAA below 40) | bounces 55% of the time |
+| Uptrend with up vol | gains strength 52% |
+| Uptrend with down vol | gains strength 40% |
+| Downtrend with up vol | bounces 60% |
+| Downtrend with down vol | bounces 48% |
+
+**Momentum persistence.** Sign of the spot change over 0.25-12 month lookbacks against the next 1-52 weeks, 9 USD
+pairs since 2000 (about 40,000 daily observations, t-test against 50%). 52% of medium-term trends continued another
+month. Trends of 4-6 months persisted for 1-4 weeks and began to mean-revert after about 2 months; the peak t-stat
+was 8.9 (5-month lookback, 4 weeks ahead). The persistence is moderate and decays: a 4-month EURUSD trend had a 95%
+confidence interval of 53.6-56.5% for continuing 4 weeks later.

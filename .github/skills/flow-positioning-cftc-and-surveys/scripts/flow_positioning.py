@@ -100,6 +100,24 @@ def swap_trade_upper_bound(hf_ust_long, hf_ust_short):
     return hf_ust_long - hf_ust_short
 
 
+def sigma_move(returns, lam=0.97):
+    """Daily return divided by the prior day's EWMA realised vol (daily units, no annualising).
+
+    var_t = lam * var_{t-1} + (1 - lam) * r_t^2, seeded with r_0^2, so the first value is NaN and the
+    scale uses information up to t-1 only. Use a warm-up period before reading early values.
+    """
+    r = pd.Series(returns, dtype=float)
+    out = pd.Series(np.nan, index=r.index)
+    if len(r) == 0:
+        return out
+    v = r.iloc[0] ** 2
+    for i in range(1, len(r)):
+        if v > 0:
+            out.iloc[i] = r.iloc[i] / np.sqrt(v)
+        v = lam * v + (1 - lam) * r.iloc[i] ** 2
+    return out
+
+
 CANON_CLASSES = ("asset_manager", "leveraged_funds", "dealer")
 
 
@@ -173,6 +191,12 @@ def selftest():
     assert rolling_zscore([2, 2, 2, 2, 2], window=5).isna().all()
     assert np.isnan(rolling_zscore([1, 2, np.nan, 4, 5], window=5).iloc[-1])
     assert np.isnan(cumulative_put_call([1.0], [0.0]))
+
+    # Sigma move: equal-size moves score 1; a move of 3 after three unit moves scores 3; the EWMA update is 0.97*1 + 0.03*4.
+    sm = sigma_move([1, -1, 1, -1])
+    assert np.isnan(sm.iloc[0]) and (sm.iloc[1:].abs() == 1.0).all(), list(sm)
+    assert abs(sigma_move([1, 1, 1, 3]).iloc[3] - 3.0) < 1e-12
+    assert abs(sigma_move([1, 2, 3]).iloc[2] - 3 / np.sqrt(0.97 + 0.03 * 4)) < 1e-12
 
     # Form PF bound (BIS, Q2 2025, $bn): 2,379 long minus 1,748 short = 631.
     assert swap_trade_upper_bound(2379.0, 1748.0) == 631.0

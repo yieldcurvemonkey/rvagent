@@ -4,6 +4,18 @@ Only facts that appear in the cited documents. Contract terms (CF yield, deliver
 
 ## USD (Treasury futures: 2y, 5y, 10y, ultra 10y, bond, ultra bond; SOFR/OIS swaps)
 - CF uses a 6% notional coupon (adopted 2000, replacing 8%); below 6% low-duration bonds tend to be CTD, above 6% high-duration, subject to slope (BofA Global Research, US Treasury futures and basis primer, 10 Jul 2025; Burghardt 2005).
+- Contract spec (BofA, US Treasury futures and basis primer, 10 Jul 2025; verify against `fut_static`):
+
+  | Contract | Face | Deliverable remaining maturity | Original maturity | Tick |
+  |---|---|---|---|---|
+  | 2y | $200k | 1 3/4-2y | <= 5 1/4y | 1/8 of 32nd = $7.8125 |
+  | 5y | $100k | 4 1/6-5 1/4y | <= 5 1/4y | 1/4 of 32nd = $7.8125 |
+  | 10y | $100k | 6 1/2-8y | none | 1/2 of 32nd = $15.625 |
+  | ultra 10y | $100k | 9 5/12-10y | <= 10y | 1/2 of 32nd = $15.625 |
+  | bond | $100k | 15-25y | none | 1/32 = $31.25 |
+  | ultra bond | $100k | 25-30y | none | 1/32 = $31.25 |
+
+  Last trade date: last business day of the delivery month for the 2y/5y, 7 business days before it for the others. Last delivery date: 3rd business day after the last trade date for the 2y/5y, the last business day of the delivery month for the others. The 5y needs original maturity <= 5y3m and remaining >= 4y2m on the first day of the delivery month, so only original-issue 5y notes qualify. Open interest: 5y about 7mm contracts (about $700bn), 2y 4.3mm (about $900bn, double-sized). 2023 futures volume about $645bn/day vs about $460bn/day primary-dealer cash trading. Futures inter-commodity curve trades: 2s7s steepener = buy 2y against a duration-weighted 10y.
 - Delivery: T+2 (intent, notice, settle). Wildcard window (RiskVal, 25 Apr 2024): futures stop 3pm, notice by 9pm New York. End-of-month for 2y/3y/5y = last business day; 10y, ultra 10y, bond, ultra bond = 7 business days before it. The 2y contract has double notional ($200k).
 - Basket gap: no long bonds issued Feb 2001-Feb 2006, so contracts expiring Feb 2011-Feb 2016 had a 5y gap and a CTD jump in 2015 (Citi, 4 Feb 2015).
 - Invoice-spread packages concentrate in the front contract; 2y and 5y packages were more frequent than 10y/bond/ultra in 2014 (Clarus 2014).

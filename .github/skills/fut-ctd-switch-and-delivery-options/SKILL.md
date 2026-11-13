@@ -60,7 +60,8 @@ contract-level tick from `fut_static.tick_size_px`; state option values in ticks
   is live; with yields far below 6% the shortest-duration bond is always CTD and the option is near worthless
   (J.P. Morgan, Special delivery, 2019).
 - Factor-scaled view: sort the basket by BPV/CF (not maturity) to see where the CTD sits and which way it can move;
-  futures DV01 ~ CTD forward DV01 / CF.
+  futures DV01 ~ CTD forward DV01 / CF. Basket eligibility (remaining-maturity windows per contract; FV takes only original-issue
+  5y notes) and last trade / last delivery rules are tabulated in [references/market-and-case-notes.md](references/market-and-case-notes.md) section 6 (BofA, Primer: US Treasury futures and basis, 10 Jul 2025).
 
 ### 2. Run the scenario engine ([`scripts/ctd_scenarios.py`](scripts/ctd_scenarios.py))
 1. Forward each deliverable to the delivery date at its repo: `P_fwd_dirty = (P_clean + AI)(1 + r x d/B) - sum(coupon x (1 + r x d_c/B))` (B = repo day-count basis, 360 or 365; `--repo-basis`),
@@ -106,6 +107,9 @@ actual crossover sits below the static parallel one and the option is worth *les
   rounding = +/-50%).
 - Convergence rule used by dealers: NB below the modelled DOV -> basis underpriced and expected to widen toward the
   option value; above -> overpriced.
+- Buying the net basis normally costs the premium: buy at 1 tick and deliver optimally and you lose about 1 tick, more on a non-CTD bond; the
+  long is paid only if the option moves in the money before delivery (BofA, Primer: US Treasury futures and basis, 10 Jul 2025). Net basis > 0 means futures trade below
+  the converted CTD forward ("excess carry" for the long). Net basis < 0 means futures rich to forwards with the options worth ~0.
 - Futures-vs-options trade: the basis is a long straddle-like option (high-duration bond basis = put on yields; low-duration basis = call on yields; middle = strangle).
   Compare model value with listed futures options struck near the switch yield; if the basis costs less, buy basis and
   sell the option (residual risks: spread moves, repo, profile mismatch, option expiry a month before LTD). See [vol-basis-vs-vol](../vol-basis-vs-vol/SKILL.md).
@@ -113,6 +117,9 @@ actual crossover sits below the static parallel one and the option is worth *les
 ### 4. Hedge ratios across switch points
 - Futures DV01 jumps at a crossover: use `P`-weighted `DV01/CF`, not the current CTD's. Locking the CTD
   materially underestimates contract duration after a switch (J.P. Morgan, 2026; Morgan Stanley, Higher Rates, Aug 2026).
+- Non-CF weighting: for any weight W, `B - W x F = (B - CF x F) + (CF - W) x F`, i.e. the CF basis plus a futures overlay. A non-CTD bond hedged against
+  the future is mostly a curve trade between that bond and the CTD (BofA, Primer: US Treasury futures and basis, 10 Jul 2025). Hold a futures hedge as
+  "bullet minus options": it is a better convexity hedge than cash for callable / MBS exposure, though MBS option value is orders of magnitude larger (BofA, same).
 - Below the crossover (low-duration CTD) the rule-of-thumb DV01 is too low (overhedged); above it too high.
   Futures can be negatively convex near crossovers even though every deliverable is positively convex (Burghardt 2005; Salomon 1990).
 - Re-size: report the percentage change in CF-adjusted DV01 vs the current CTD at each candidate: ~+37% Buxl, +8%
@@ -122,7 +129,8 @@ actual crossover sits below the static parallel one and the option is worth *les
   `(1 - CF) x face` stays unhedged.
 
 ### 5. Timing: first vs last delivery day
-- Delivery runs intent, notice, delivery over ~2-3 business days; BofA's primer says use T+2 in carry (CME describes a 3-day cycle). Be consistent with the repo term you use.
+- Delivery runs intent, notice, delivery over ~2-3 business days; use T+2 in carry (BofA, Primer: US Treasury futures and basis, 10 Jul 2025; CME describes a 3-day cycle). Be consistent with the repo term you use.
+- Price to the last delivery day when carry is positive (repo below yield) and to the first when negative: FV trades to the first, WN to the last (BofA, Primer, 10 Jul 2025).
 - Positive carry (repo < CTD running yield): deliver on the last day; negative carry: deliver at the start unless the
   remaining option value exceeds the carry given up. A month of negative carry is roughly `(repo - yield)/12`, e.g. repo
   100bp above yield ~ 8bp of invoice (Burghardt 2005).
@@ -133,11 +141,11 @@ actual crossover sits below the static parallel one and the option is worth *les
   deliveries dominate otherwise (>90% of TY/UXY/US/WN June 2026 deliveries in the last week; FV exception).
 - Roll or close longs before the first day they can be noticed to avoid taking delivery.
 
-### 6. Wildcard (US only: futures settle at 3pm ET, cash trades on, notice until the evening)
+### 6. Wildcard (US only: futures settle at 3pm ET, cash trades on, delivery may be declared until 7pm ET)
 - Tail: a CF-hedged long basis holds `1/CF` face per 1 face delivered. After a post-close **rally** deliver and sell the
   `(1/CF - 1)` tail higher; a sell-off has no equivalent loss, you just wait. (CF > 1, as in the old 8%-notional contract, flips the sign: the
   short is short a tail and a post-close FALL pays; `x*` comes out negative and `wildcard_value` uses `|k|`; Burghardt 2005: $100mm 8-3/4% 8/20, CF 1.3093,
-  1,309 futures, $30.9mm tail, 6/32 basis needs a 25.4/32 fall, `= 6/32 x 1.3093 / 0.3093`.) Exercise iff
+  1,309 futures, $30.9mm tail, 6/32 basis needs a 25.4/32 fall, `= 6/32 x 1.3093 / 0.3093`.) Exercise forfeits the remaining basis; FOMC delivery months (press conference 2:30pm) are where it matters most (BofA, Primer: US Treasury futures and basis, 10 Jul 2025). Exercise iff
   `(1/CF - 1) x x > GB`, i.e. `x* = GB x CF / (1 - CF)` (x = post-close price rise, points per 100 face; BofA, Primer:
   US Treasury futures and basis, 10 Jul 2025, equivalent to `GB x C < x (1 - C)`). It is a ~3-hour call on the tail,
   paid for with the gross basis on the delivered bonds.
@@ -169,7 +177,7 @@ actual crossover sits below the static parallel one and the option is worth *les
 ### 8. Ranking and attribution
 Switch option is "far and away" the largest, EOM next, timing and wildcard "usually nothing" in the 2005 text; in the
 2018-26 US regime the wildcard (WN, TN) and the switch (US, UB when 30y > ~5.5%) dominate, EOM is minor (Burghardt 2005;
-J.P. Morgan 2019-2026). Total option value = switch + wildcard + EOM (a vendor tool sums the selected options and subtracts `total x CF_i` from each bond's NB). A WI bond that is CTD inflates the back-month option (TY back ~4+/32 in Aug 2026): show it with and without.
+J.P. Morgan 2019-2026). Regime context (BofA, Primer: US Treasury futures and basis, 10 Jul 2025): with yields well below 6% the CTD net basis is often close to 0 and the wildcard still gives 4-5 ticks on some contracts; near 6% rates nets were often 10+ ticks. Total option value = switch + wildcard + EOM (a vendor tool sums the selected options and subtracts `total x CF_i` from each bond's NB). A WI bond that is CTD inflates the back-month option (TY back ~4+/32 in Aug 2026): show it with and without.
 
 ### 9. Delivery squeezes and fails
 - Normal theory: every NB > 0; in practice with a negligible switch probability many desks set the CTD NB to 0. Negative NB
@@ -290,7 +298,7 @@ Tag assumptions (repo, vol, betas) and the as-of snap.
 - Tuckman & Serrat - Fixed Income Securities (4th ed., Wiley, 2022): cost of delivery, CTD at expiry, TYU1 net bases, tree pricing of quality/timing/EOM/wild-card options.
 - Salomon Brothers - Understanding Treasury Bond Futures: Questions and Answers (Oct 1990): CF mechanics, cusps, four option components, DV01 across cusps.
 - Alexander Düring - Fixed Income Trading and Risk Management (Wiley, 2021): net bases as options, timing, squeeze signals, new issues.
-- BofA Global Research - US Rates Primer: US Treasury futures and basis (R. Axel, 10 Jul 2025): option taxonomy, wildcard rule and P&L, scenario fair value.
+- BofA Global Research - US Rates: Primer: US Treasury futures and basis (Ralph Axel, 10 July 2025): contract and basket terms, option taxonomy, wildcard rule and P&L, non-CF weighting, scenario fair value.
 - BofA Global Research - US Rates Alpha: Buy futures basis = cheap options (10 Apr 2025): net basis as premium, TYM5 trade.
 - BofA Global Research - US Rates Data: Futures Basis Report (7 Aug 2025): CTD scenario grid schema and numbers.
 - J.P. Morgan - Special delivery: how delivery options distort rich/cheap metrics for UST futures (4 Dec 2019): OA BNoC/IRR, wildcard fair value, timing.

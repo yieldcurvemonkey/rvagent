@@ -86,6 +86,16 @@ Midpoints sum to 100%. The source's breakeven-move frequency at the time was 60-
 remain; reset the range from the survivors. Its caveat: early hard-landing data can look like a soft landing, so
 prefer a bullish range bias to calling a hard landing outright.
 
+**Range reset and likelihood sources** (BofA, 10y rates and the Monty Hall problem, 6 Aug 2024). The first Fed cut was
+pulled forward to September, a fact inconsistent with reacceleration and partly with no landing, so doors 3 and 4 collapse.
+The new 10y range comes from the survivors: top = the soft-landing level (about 4-4.25%), bottom = the midpoint of the
+hard-landing level (3%) and the soft-landing level, about 3.5%. Result: range 3.5-4.25%, buy dips in the lower half; a
+break below 3.5% needs a hard landing as the baseline. Earlier, with soft and no landing as the baseline, the 10y traded
+4-5% and the range midpoint (about 4.4-4.5%) separated expansion-biased periods (most of 1H24) from slowdown-biased ones
+(since late May). Likelihood sources: hard landing (20-25%) from the option-implied 10y distribution at end-2024 and the
+bull-steepening share of 2s10s moves (hard landing about 20% vs reacceleration about 0%); soft landing (37.5-42.5%) from
+the breakeven dynamic. A Sahm-rule reading of about 0.53 was at the level that has historically coincided with recessions.
+
 **Scenario-to-curve mapping (choose a structure that pays in both branches).** Barclays (Global Rates Weekly: The
 urgency question, 2 Oct 2026): when duration risks are two-sided but curve risks are asymmetric (the bear case and
 the fiscal wild card are 10-30y risks; the bull case benefits the belly and front end), a 1y-forward 2s10s steepener
@@ -282,3 +292,102 @@ Fly regime map, USD 2s5s10s (same source): mild shifts before early 1996; tranqu
 shifts from late 2000 to early 2003. A mid-1999 "5s cheap" rule plus or minus 5bp made about 5bp per turn in 1999-2001,
 but a March 2001 long 5s lost about 15bp over five months. Stylised regimes with means 15, 35 and 25bp leave a
 mean-reversion trader "nearly always off sides".
+
+## 10. Trend-follower (CTA) flow branch
+
+Sources: BofA, More CTA Models = Better Impact Estimates (2 Jun 2025) and BofA, CTAs impact on the rates market
+(18 Aug 2020).
+
+**Bottom-up replica (2025 source).** The four parameters that matter are the investment universe, the trend lookback,
+the sizing rule and the stop-loss rule. The replica that tracked a trend-follower index best used a broad cross-asset
+futures universe, a medium-term lookback, risk-parity sizing and a moderately aggressive stop. Output is a z-score
+allocation per market (absolute sizes are not published; the cap per asset in the model is 10%).
+
+| Item | Rule |
+|---|---|
+| Short-term trend | collection of moving-average crosses from 21 to 100 trading days |
+| Long-term trend | crosses between 50 and 252 trading days |
+| Medium-term | equal weight of the short and long windows |
+| Stop | a prescribed loss from the high-water mark closes the position entirely; the level barely changes long-run performance because stops are rare and trends reverse anyway |
+| Ensemble | 3 lookbacks x 4 stop thresholds = 12 models (thresholds not given in the source) |
+| Sigma move | daily return / prior-day EWMA vol (lambda 0.97), de-annualised |
+| Correlation to the index | EWMA, lambda 0.97 |
+| Projected paths | bear / median / bull = 2.5th / 50th / 97.5th percentile of historical 5-day return paths at current vol; show only the unwind triggers inside the path |
+
+Findings to reuse:
+- Impact is largest when the average allocation is stretched and similarly positioned across lookbacks, and a reversal
+  trips many stops together. The biggest flows come from unwinds, not accumulation.
+- Count rule: 4 or more of 12 models stopped out on the day means an above-average absolute sigma move, shown for equity
+  index futures (S&P 500, EURO STOXX 50, Nikkei), 10y Treasury futures, Bund futures, crude, gold and three FX pairs
+  (2010 to May 2025). Three stop-outs came with large moves but not reliably.
+- Equity case: of the 15 largest one-day sigma declines since 2010, 9 coincided with stop-loss unwinds and the 3 largest
+  coincided with consensus longs stopped out across models. The exceptions (Aug 2011 downgrade, Covid, April 2025) were
+  fundamental stress; April 2025 was the only one with no unwind contribution.
+- Regime drift: before 2013 the short-term model correlated more with the index; since then the long-term model has been
+  more stable, so trend followers shifted to longer lookbacks. The medium-term model correlates highest and most stably.
+  Of 14 listed managed-futures funds (correlation to the index at least 0.7, about 13bn USD), 10 were most often closest to
+  the medium-term model. After 3 Apr 2025 the long-term model correlation rose, the short and medium fell, and the average
+  pairwise model correlation hit its second-lowest on record (dispersed positioning).
+- Worked case, 30 May 2025 (equity index): trend followers long across models, largest from the medium model; unwind range
+  5200 to 4963; in the bearish path 3 of 12 models (2 medium, 1 short) would stop out, below the 4-model rule.
+- Scale: trend-follower hedge-fund AUM 339bn USD (2024 Q4), gross notional often above 3x AUM.
+- Monitor a range of lookbacks and stops: the medium model alone may suffice for monitoring, the consensus of all gives
+  conviction.
+
+**Top-down replica of duration and curve bias (2020 source).**
+1. Cluster assets to a representative set per class (equities, longer-duration bonds, shorter-duration bonds, metals,
+   energy, FX), because assets in a cluster carry overlapping information. Use assets, not broad benchmarks (too broad,
+   rebalancing rules interfere, hidden long/short bias).
+2. Take only the first principal component of each set as the feature (higher eigenvectors are unstable). For FX the dollar
+   index replaced the FX component: average R-squared 66% on 2-month windows since 2015.
+3. Rolling OLS of the index return on the 6 features over 2 months; project the feature betas back to assets through the
+   inverse PC1 transform.
+4. Read: long-duration beta = duration bias; long-duration beta against short-duration beta = curve bias (long the long
+   feature and short the short feature = flattener). Long-duration betas are more stable; short-duration betas depend on
+   the policy path. Flow signal = weekly change in betas (duration first order, curve second order). Beta z-score against
+   the average 3-month beta.
+5. Validate: correlation with a multi-crossover momentum signal is significant for the equity index, 10y and crude, lower
+   for gold and lowest for the dollar, with a lead/lag of 15-20 days; the 10y beta trend correlated about 60% with net
+   non-reportable 10y futures positions and about 20% with other reportable; levels and long/short implications do not
+   match.
+
+History as regime labels (same source): 2016 long duration plus flatteners (Fed tightening while the neutral rate was cut),
+then steepeners after the US election (fiscal easing); 2019 flattening bias (neutral-rate downgrade); early 2020 betas
+decayed in the dash for cash (Treasuries and gold sold), which supports a short window; in Aug 2020 a long-duration bias
+since February, longs built in the week of 10 July and lightened in early August, flattening bias peaked 24 July. Limits:
+the index has survivorship bias, and more diverse models limit what a top-down average can capture.
+
+## 11. Futures CTD scenario grid and the wild card
+
+Source: BofA, Primer: US Treasury futures and basis (10 Jul 2025).
+
+**CTD regime rules.** Conversion factor = price at a 6% yield. Below 6% the low-duration bond tends to be CTD, above 6%
+the high-duration one. Flat-6% thought experiment: a parallel rally makes the shortest-duration deliverable CTD, a sell-off
+the longest. An upward-sloping basket makes the longest bond CTD, an inverted one the shortest. Futures price = CTD forward
+price / factor less total option value; futures track the worst performer, so they shorten in rallies and lengthen in
+sell-offs (lower convexity than cash, possibly negative). Factors in the long-bond contract range from 0.43 (1.625% coupon)
+to 0.83 (4.75%), and factors well below 1 give the wild card its value.
+
+**Scenario grid for a long CTD basis (Sep 2025 long-bond contract, CTD the 11/43 bond).**
+
+| Yield shift | CTD becomes | Basis effect |
+|---|---|---|
+| base | 11/43 | long 11/43 basis worth about 7 ticks |
+| +50bp | 11/44 | 11/43 basis falls to about 6 ticks |
+| +100bp | 8/50 | the 11/53 basis is worth 61 ticks |
+| -50bp or more | 2/41 | CTD switches to the short-maturity end of the basket |
+
+Read: the long CTD basis pays like a straddle in the shift, flat near the base and long the switch in either direction. Fair
+value of a net basis = probability-weighted terminal payoff across such a grid (simulate shifts and twists); compare with a
+replicating futures option and, if the basis is cheaper, buy the basis and sell the put. Futures PV01 = sum over deliverables
+of P(CTD) x forward PV01, with the CTD probabilities taken from the grid.
+
+**Wild-card rule.** The 3pm settle fixes the invoice and the short can declare delivery before 7pm while cash trades.
+Exercise when gross basis x factor < (current cash price - 3pm cash close) x (1 - factor): a 3-hour call on (1 - factor) of
+the bond, paid for with the gross basis on factor-weighted bonds. Exercising forfeits the remaining net basis. Worked case
+(source): long 100mm face of a 4.75% Nov 2053 bond against short 734 long-bond contracts (factor 0.7342), gross basis 5
+ticks, net 4; the market rallies 1 point after 3pm. Delivering 734 contracts costs 734 x 5 x 31.25 = 114,688 USD; selling
+the 26.6mm tail (100 - 73.4) 1 point higher gains about 266,000 USD. Our check of the rule: 5/32 x 0.7342 = 0.115 is below
+1 x (1 - 0.7342) = 0.266, so exercise. The option matters most in FOMC delivery months (press conference at 2:30pm). Buying
+the net basis normally loses the premium (about 1 tick if bought at 1 tick and delivered optimally, more on a non-CTD),
+and basis risk is live from inception, not only in the delivery month.

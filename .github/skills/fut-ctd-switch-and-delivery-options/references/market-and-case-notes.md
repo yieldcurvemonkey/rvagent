@@ -71,3 +71,22 @@ last tender Mon 29, last notice Tue 30, last delivery Wed 31. 2026 roll mechanic
 Bonds richen when they become CTD and cheapen when they fall out of the basket; CTDs often trade at negative OAS to a fitted Treasury curve (liquidity premium; Treasury Borrowing Advisory Committee, 2024). Estimated TY CTD premium vs a fitted curve 0.6-1.2bp (median vs mean) and it
 tends to start rich and cheapen through the roll (Citi, Fixing the plumbing, 30 Sep 2019). Regression-weighted flies of neighbouring bonds and regressions of the CTD ASW on curve slope separate idiosyncratic from common factors; the contract's own positioning
 can be a CTD-sector RV leg (WN shorts vs 25s/30s, R^2 84%; J.P. Morgan, Canary in a coal mine, 25 Feb 2020).
+
+## 6. Contract terms and basket eligibility (BofA, Primer: US Treasury futures and basis, 10 Jul 2025)
+Orientation only; take the terms from `fut_static` / `fut_basket`.
+
+| Contract | Face | Deliverable remaining maturity | Original maturity | Tick |
+|---|---|---|---|---|
+| TU | $200k | 1 3/4-2y | <= 5 1/4y | 1/8 of 32nd = $7.8125 |
+| FV | $100k | 4 1/6-5 1/4y | <= 5 1/4y | 1/4 of 32nd = $7.8125 |
+| TY | $100k | 6 1/2-8y | none | 1/2 of 32nd = $15.625 |
+| UXY | $100k | 9 5/12-10y | <= 10y | 1/2 of 32nd = $15.625 |
+| US | $100k | 15-25y | none | 1/32 = $31.25 |
+| WN | $100k | 25-30y | none | 1/32 = $31.25 |
+
+- Last trade date: last business day of the delivery month for TU/FV; 7 business days before the last business day for the others. Last delivery date: 3rd business day after the last trade date for TU/FV; last business day of the month for the others.
+- FV needs original maturity <= 5y3m and remaining maturity >= 4y2m on the first day of the delivery month, so only original-issue 5y notes qualify (no re-opened or seasoned 7y).
+- Scale (mid-2025): FV open interest ~7mm contracts (~$700bn); TU ~4.3mm, ~$900bn notional because it is double-sized; 2023 futures volume ~$645bn/day vs ~$460bn/day of primary-dealer cash trading. Use with the open-interest-vs-CTD-supply squeeze check.
+- **FVU5 basket.** 8 bonds (11/30/2029 to 6/30/2030, plus the coming 7/31, 8/31 and 9/30/30 issues), first delivery 9/2/2025, last 10/03/25, GC repo for all bonds. CTD Nov-2029: net basis -0.5 tick, highest IRR.
+- **Scenario fair value, USU5 (same primer, scenario screen).** CTD 11/43; +50bp -> CTD 11/44 and the 11/43 basis ~6 ticks (from 7); +100bp -> CTD 8/50 and the 11/53 basis ~61 ticks; -50bp or more -> CTD 2/41. Fair net basis = probability-weighted payoff, so a long CTD basis pays like a straddle.
+- **Positioning.** Asset managers are structurally long futures (short basis, a leverage substitute favoured when the curve is inverted) and levered funds long the basis, similar in size; asset managers carry basis risk through their holding period even though they roll before delivery.

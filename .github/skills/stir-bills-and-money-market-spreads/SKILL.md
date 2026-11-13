@@ -179,6 +179,13 @@ in 43, 100% in 51. The rule of thumb is about 51 business days to reach target. 
 closure ranged from 0% to 112% across episodes), and recent episodes were slower, so skew to a slower build.
 `scripts/bill_yields.py` implements the days-to-close lookup as `business_days_to_close`.
 
+Expression of the resolution trade (BofA, Funding & debt limit, 27 Jun 2025): prefer an outright SOFR-FF short to a
+SOFR-FF curve trade, because the whole curve cheapens as SOFR moves up and a Fed liquidity add that could anchor later
+dates is hard to time. SOFR leads and EFFR follows with a lag. Take the event-study average as a floor, not a forecast:
+the study implied at least 4-5bp of further tightening. In the 2019 stress analog SOFR-IORB went from about +7bp
+pre-stress to +15bp at the peak and back to +2bp (see
+[debt-limit and TGA detail](references/debt-limit-and-tga.md), section 10).
+
 Bill-supply view for each phase: net bill supply is negative while the limit binds. After resolution the wave is
 large: BofA sized over $900bn of bill supply from August to November 2025 to rebuild the TGA to about $850bn+
 (BofA, May 2025), and Conks put it at up to about $1tn (Conks, Jun 2025).
@@ -223,7 +230,8 @@ large: BofA sized over $900bn of bill supply from August to November 2025 to reb
 - **Debt-limit resolution averages (BofA, Jun 2025):** the source prints average changes in bill-OIS after the
   2017-2019 resolutions as OIS-less-bill, so negative = bills cheap. The three numbers are the horizons 1m / 3m / 6m
   after resolution (the SOFR-FF row averages out that way): 1m bill-OIS -7.5 / -4.0 / -9.3bp and 3m bill-OIS -3.6 /
-  -1.5 / -4.2bp. Use the sign and order of magnitude; 2019 is distorted by Fed action.
+  -1.5 / -4.2bp as printed, i.e. +7.5 / +4.0 / +9.3 and +3.6 / +1.5 / +4.2bp in this skill's bill-minus-OIS sign
+  (bills cheapened). Use the sign and order of magnitude; 2019 is distorted by Fed action.
 - **Kink (Citi, Jun 2025):** the 8-week bill maturing 12 Aug 2025 cleared 4.38%, the highest of the last four
   auctions. That is the kink: a bill that matures just after the X-date cheapens relative to neighbours.
 - **Bill-funded buyback (Citi, Aug 2026; FT, 19 Aug 2026):** the buyback announcement lifted 3m and 6m bill
@@ -260,8 +268,9 @@ Confirmation checks before acting on a bill-OIS signal:
   them without conversion.
 - **Flow not stock:** bill share is a weak predictor. A large paydown can richen bills sharply for a few weeks
   and then reverse.
-- **Debt-limit analogs need an RRP condition:** 2021 and 2023 are not comparable with 2017-19 (large excess
-  liquidity). Condition every analog on the remaining RRP buffer.
+- **Debt-limit analogs need an RRP and supply condition:** 2021 and 2023 are not comparable with 2017-19 (large
+  excess liquidity). Condition every analog on the remaining RRP buffer and on similar percentage growth in bills and
+  total supply (BofA, Funding & debt limit, 27 Jun 2025).
 - **Fed intervention truncates analogs:** the 2019 funding-stress analog was cut short by Fed action after Sep
   2019 repo stress. 3m and 6m averages for that year are distorted.
 - **X-date uncertainty:** the X-date stays uncertain until after the April tax date. Treasury financing forecasts

@@ -178,6 +178,60 @@ issuance rose earlier than expected, which works against a widener.
 - Citi Aug 2026 forecast table (Aug 2026 and Dec 2026, $bn): TGA 950 and 850; private bills 6,715 and 6,849; reserves
   2,953 and 3,032; private bills minus reserves 3,762 and 3,817.
 
+## 10. Resolution analogs: per-year detail, 2019 regimes and supply conditioning (BofA, Funding & debt limit, 27 Jun 2025)
+
+Per-year averages after resolution at 1m / 3m / 6m, in bp, signs as printed in the source's Exhibit 4 (SOFR-FF is FF
+less SOFR; bill-OIS is OIS less bill; UST-OIS is OIS less Treasury yield). The average row is in section 4.
+
+| Series | 2017 | 2018 | 2019 | Average |
+|---|---|---|---|---|
+| SOFR-FF (FF less SOFR) | 1.9 / -0.4 / -9.6 | -10.0 / -11.7 / -7.7 | -14.8 / -1.0 / 2.1 | -7.7 / -4.4 / -5.1 |
+| SOFR-IORB | -2.0 / 0.7 / 11.2 | 10.5 / 15.0 / 12.4 | 0.7 / -0.5 / -6.4 | 3.0 / 5.1 / 5.7 |
+
+Read 2017 and 2018 as one long episode (five months apart) and 2019 as the funding-stress analog. The spread across
+years is wide (SOFR-FF 1m ranges from +1.9 to -14.8), so quote the average as a floor on the move, not a point
+forecast.
+
+**2019 stress regimes (Exhibit 5, bp).** Averages over three windows: pre-stress (end-April to end-July 2019), peak
+stress (end-July to end-September) and normalisation (end-September 2019 to end-January 2020).
+
+| Series | Pre | Peak stress | Normalisation |
+|---|---|---|---|
+| 3m bill-OIS | -1.2 | -8.6 | 0.2 |
+| SOFR-IORB | 7.2 | 15.1 | 2.1 |
+| SOFR-FF (SOFR less FF) | 3.1 | 10.6 | 1.2 |
+
+Applied to June 2025 levels, the source sized the move from the current average to each regime (current level, move to
+normalisation, move to peak stress): 3m bill-OIS -1.6, +1.8, -7.0; SOFR-IORB -10.0, +12.0, +25.1; SOFR-FF -2.8, +3.9,
++13.4. Each regime value equals the current level plus the move (for example -10.0 + 25.1 = 15.1), so the table is
+internally consistent. Sign check: the printed label for the 3m bill row reads bill less OIS, but a stress value of
+-8.6 only makes sense as OIS less bill (negative = bills cheap), the same sign as Exhibit 4. Treat that row as
+OIS less bill and state it. In the repo convention (bill minus OIS, positive = cheap) the three values flip to +1.2,
++8.6 and -0.2.
+
+Rule of thumb from the table: peak stress meant SOFR-IORB about +15bp and SOFR-FF about +10bp over a two-month
+window, then a return to roughly +2bp and +1bp. That is the upper bound for a Fed-intervention-free squeeze, not a base
+case.
+
+**Supply conditioning.** The analogs were chosen because bill and total Treasury supply grew by a similar percentage
+and the ON RRP buffer was small. Percentage change in bills outstanding at 1m / 3m / 6m after resolution: 2017
+1 / 8 / 29; 2019 4 / 3 / 5; 2023 11 / 25 / 49; 2025 projection 6 / 6 / 2. Total marketable debt, 2025 projection:
++2 / +4 / +5. ON RRP ($bn): 2017 96 one month before resolution and 120 one month after; 2019 near zero; 2023 2,218 to
+1,910; 2025 projection 143 to 80 at 1m and 138 to zero at 3m. Bills outstanding were about $5.8-6.5tn in 2025. 2023
+is not a usable analog: bills grew 49% into a $2tn RRP buffer.
+
+**Expression and timing of the resolution trade.**
+- Prefer an outright SOFR-FF short to a SOFR-FF curve trade. The whole curve should cheapen as SOFR moves up, and a Fed
+  liquidity add (ending QT, buying bills) that could anchor later dates is hard to time, so a curve spread can lose to
+  a Fed response that the outright expresses more cleanly.
+- SOFR leads and EFFR follows with a lag. The market belief that EFFR will not move is wrong in the analogs.
+- Use the historical minimum as the entry case: the event study implied at least 4-5bp of further SOFR-FF tightening
+  from the June 2025 level, and the outright keeps the option on a larger SOFR spike.
+- A quarter-end inside the contract window adds convexity to the position. The Q2 2025 quarter-end SOFR jump on a low
+  TGA supported the October contract. Check which fixings the contract averages before relying on a quarter-end.
+- Time the trade against the risk that resolution comes before the base case: the source entered in late June because
+  passage in early July was a live risk against a late-July or early-August base case.
+
 ## Sources for this file
 - BofA Global Research - US Rates Watch: Funding & debt limit: history lessons (Mark Cabana, Katie Craig, 27 Jun 2025).
 - BofA Global Research - US Rates Viewpoint: Debt limit FAQ: spring 2025 update (Mark Cabana, Katie Craig, Ralph Axel, 12 May 2025).

@@ -1,6 +1,6 @@
 ---
 name: flow-positioning-cftc-and-surveys
-description: Reads G10 rates positioning from CFTC TFF/COT futures data, client and sentiment surveys, options put/call flow and real-money flows (pensions and LDI, insurers, convexity hedgers, TIC, CTAs). Turns positions into DV01, point-in-time z-scores and percentiles, roll-pressure and convexity-adjustment residual reads, and tests whether a position is structural or a tradeable view. Use when asked about CFTC positioning, COT or TFF data, asset manager or leveraged fund net longs or shorts, basis trade size, crowded trades, short covering, Treasury futures roll pressure (TU FV TY UXY US WN, first notice), ED or SOFR futures convexity adjustment vs model, client survey net longs or neutrals, bull-bear sentiment, put/call, CTA stops, short squeeze, pension funded ratio, LDI, TIC or foreign official flows, Form PF, or whether a move is flow-driven.
+description: Reads G10 rates positioning from CFTC TFF/COT futures data, client and sentiment surveys, options put/call flow and real-money flows (pensions and LDI, insurers, convexity hedgers, TIC, CTAs). Turns positions into DV01, point-in-time z-scores and percentiles, roll-pressure and convexity-adjustment residual reads, and tests whether a position is structural or a tradeable view. Use when asked about CFTC positioning, COT or TFF data, asset manager or leveraged fund net longs or shorts, basis trade size, crowded trades, COT extremes and price divergence, short covering, Treasury futures roll pressure (TU FV TY UXY US WN, first notice), ED or SOFR futures convexity adjustment vs model, client survey net longs or neutrals, bull-bear sentiment, put/call, CTA stops, CTA beta replication, short squeeze, pension funded ratio, LDI, TIC or foreign official flows, Form PF, or whether a move is flow-driven.
 ---
 
 # Flow positioning: CFTC, surveys and real-money flows
@@ -18,7 +18,8 @@ and as a follower in another, so validate the sign per indicator and per market 
 - Treasury futures roll views (TU, FV, TY, UXY, US, WN) and calendar spreads around first notice day (FND).
 - ED/SOFR (and other STIR) convexity adjustment (CA) vs model, and whether positioning explains the gap.
 - Client surveys (net long share, neutral share), exposure-minus-view sentiment, options put/call flow.
-- Real-money flow reads: pension funded status, LDI, insurers, TIC and official holdings, fund flows, CTA positioning.
+- Real-money flow reads: pension funded status, LDI, insurers, TIC and official holdings, fund flows, CTA positioning and
+  CTA stop-out impact, COT extremes against the price trend.
 - Not for: convexity mechanics of MBS and callables ([flow-mbs-convexity-hedging](../flow-mbs-convexity-hedging/SKILL.md),
   [vol-structured-flows-and-vega-supply](../vol-structured-flows-and-vega-supply/SKILL.md)); dealer-level trade-repository
   flow ([flow-sdr-and-dealer-positioning](../flow-sdr-and-dealer-positioning/SKILL.md)); structural ALM demand modelling
@@ -120,8 +121,10 @@ The sign is not fixed. Treat the table as the default hypothesis and test it on 
 | Survey net long share (z vs 1y) and neutral share | net short with high neutrals = short base not crowded | J.P. Morgan (Canary, Feb 2020): 8% net short, about 1.3 sd below average, neutrals near top of range | Read net and neutral together |
 | T-note options put/call, dollar-weighted (sum of OI x settle for puts / for calls), 1y z | rates-native gauge: low z = bullish-leaning options positioning | J.P. Morgan (Canary, Feb 2020): z -0.95 | Indicative; read with survey and CFTC |
 | Cumulative options put/call (YTD notional) | above 100% bearish, below 100% bullish | BofA FX options-flow study (Feb 2021): one year of data | Indicative only |
+| Net speculative position as % of OI vs its mean +/- 2 sd (legacy non-commercial, TFF asset manager, TFF leveraged funds) | beyond +2 sd bearish, beyond -2 sd bullish (contrarian), stronger when the price trend turns or positioning and price diverge | BofA (Technicals Explained, 14 Jan 2025): these groups are large or build quickly, so surprises force fast exits | AM and LF mirror in one contract, so count them as one signal; test the sign per contract (Method 4, test 1; 6i) |
 | Trend-follower position (MA-sign model, -4..+4) | limited counter-signal in bonds | Willer and Saunders (2026): bond max-short and max-long buckets differ little | Use for flow timing, not as a contrarian rule |
-| Stop-loss exposure of a CTA ensemble | >= 4 of 12 models stopping predicts above-average sigma moves | BofA CTA Monitor (Jun 2025): 9 of 15 largest 1-day sigma declines in S&P futures since 2010 coincided with stop waves; same pattern in TY and Bund | Count stops daily from price data |
+| CTA duration and curve betas (rolling regression on asset-set principal components, 2-month window) | long-duration beta = duration bias; long minus short-duration beta = curve bias; week-on-week beta change = flow | BofA (CTAs impact on the rates market, 18 Aug 2020): 10y beta trend correlated about 60% with CFTC non-reportable 10y futures, levels did not match | Validate against a momentum signal and CFTC before use; 6g |
+| Stop-loss exposure of a CTA ensemble | >= 4 of 12 models stopping predicts above-average sigma moves | BofA (Systematic Flows Monitor, 2 Jun 2025): 9 of 15 largest 1-day sigma declines in S&P futures since 2010 coincided with stop waves; same pattern in TY and Bund | Count stops daily from price data |
 
 ### 6. Flow-to-price mechanics (where positioning explains a residual)
 
@@ -191,11 +194,36 @@ holding that falls only because yields rose gives zero purchases. Z-score the re
 distort country data: holdings held through a different custodian can look like selling in one centre and buying in
 another. Cayman sales may be hedge funds unwinding basis trades, not official selling. Wait for a string of months before reading a trend.
 
-**6g. CTA positioning.** Trend-follower position = sum over n in {22, 66, 200, 252} of sign(price - SMA_n), range -4 to +4
-(Willer and Saunders, 2026). For CTA risk, unwinds matter more than accumulation, and ensemble stops matter more than the
-level. The 12-model stop ensemble is a separate construct: 3 lookbacks times 4 stop thresholds (thresholds not published). The sigma move = daily return / prior-day realised vol
-(de-annualised), with EWMA lambda 0.97 (BofA CTA Monitor, Jun 2025). A reversal that trips many stops at once is the
-large-move case.
+**6g. CTA positioning and impact.** Three estimates, none of them the real CTA book: a price-only position signal, a
+bottom-up ensemble for stop-out risk, and a top-down beta read for duration and curve bias. Tables and worked numbers are
+in [references/cta-and-cot-positioning.md](references/cta-and-cot-positioning.md).
+- *Position signal.* Trend-follower position = sum over n in {22, 66, 200, 252} of sign(price - SMA_n), range -4 to +4
+  (Willer and Saunders, 2026). For CTA risk, unwinds matter more than accumulation, and ensemble stops matter more than the
+  level.
+- *Bottom-up ensemble* (BofA, Systematic Flows Monitor, 2 Jun 2025). Four choices decide a replication: universe, trend
+  lookback, sizing and risk management. The benchmark index tracked best with a broad futures universe, a medium
+  lookback, risk-parity sizing and a moderately aggressive stop. Short-term trend = moving-average crosses from 21 to 100
+  days, long-term = crosses from 50 to 252 days, medium = equal weight of both; a stop closes the position after a set loss
+  from its high-water mark. The ensemble is 3 lookbacks times 4 stop thresholds = 12 models (thresholds not published).
+  Impact is largest when all lookbacks are similarly positioned and stretched and a reversal trips many stops together.
+  Sigma move = daily return / prior-day realised vol, EWMA lambda 0.97 (`sigma_move` in the script). Rule: on days with 4
+  or more of 12 models stopped, the absolute sigma move beat its full-sample average (S&P futures, and the same monotone
+  pattern in TY and the Bund future, 2010 to May 2025); 3 stops is not reliable. Diagnostics: the average pairwise EWMA
+  correlation of the short, medium and long models (low = dispersed positioning, small collective impact), and unwind
+  triggers set against the 2.5th, 50th and 97.5th percentile 5-day return paths at current vol, shown only when inside that
+  range. A trigger outside the 5-day range is not a near-term risk.
+- *Top-down beta read* (BofA, CTAs impact on the rates market, 18 Aug 2020). Cluster assets within each class (equities,
+  longer-duration bonds, shorter-duration bonds, metals, energy, FX), keep the first principal component of each as a
+  feature (higher components are unstable), and run a rolling OLS of the CTA index return on the six features over 2 months
+  (using the dollar index in place of the FX feature raised average R^2 to 66% since 2015). The long-duration beta gives
+  the duration bias; the long-duration beta against the short-duration beta gives the curve bias (long the long-duration
+  feature and short the short-duration feature is a flattener, curve spread = long - short falling). Long-duration betas are
+  stable, short-duration betas follow the policy path. Use week-on-week beta changes as the flow signal (duration is first
+  order, curve second order) and z-scores against the average 3-month beta. Check the betas against a momentum signal
+  (maximum correlation at a 15 to 20 day lead or lag) and against CFTC (about 60% with net non-reportable 10y futures):
+  levels and signs do not match CFTC, so use the betas for direction and flow only.
+- *Limits.* The benchmark index has survivorship bias, real CTAs differ in universe, lookback, risk target and stop
+  aggressiveness, and a top-down average captures less as models diversify.
 
 **6h. Survey and options sentiment.** Exposure-minus-view: plot the sentiment exposure index minus the view index,
 each on a -100 to +100 scale (BofA, UK Rates Viewpoint, Sep 2024). A constructive view without rising exposure means
@@ -205,6 +233,20 @@ drifting bearish (BofA, Feb 2021, EURUSD, $bn). That study is FX options from a 
 use the same ratio on listed or repository swaption notional and treat the sign as a hypothesis. Use the
 notional-weighted average strike minus spot only as a weak tiebreaker: its direction called next month's average spot
 64% of the time in 2020, against 58% for the change in cumulative put/call.
+
+**6i. COT extremes and price/positioning divergence.** Net position as a % of OI, on the legacy non-commercial group or
+the TFF asset-manager and leveraged-fund classes (and managed money in disaggregated reports), against its mean and +/- 2
+sd bands (BofA, Technicals Explained, 14 Jan 2025). Default hypothesis: beyond +2 sd is a bearish extreme, beyond -2 sd a
+bullish one, because these groups are large or build positions fast, so an adverse surprise forces rapid exits. The % OI
+form normalises for open-interest growth (see Drift in Method 3). Combine with the price trend: a divergence between the
+price trend and the positioning trend can flag a coming trend change, and an extreme is only a warning, not a trigger.
+Own default for the price filter: classify the contract by a rising or falling weekly moving average (the primer uses 13, 26,
+40 and 200 weeks) into bullish (close above a rising MA), bullish at risk (below a rising MA), bearish (below a falling
+MA) and bearish at risk (above a falling MA); treat a long extreme as crowded-long risk once the state is at risk or worse,
+mirror for shorts. Counting an AM extreme and an LF extreme in the same contract as two signals double counts the basis
+mirror (Method 4, test 1). Condition on trend and compare hit rates with the unconditional base rate: in the primer's
+golden-cross studies the 200-day slope changed or reversed results with 14 to 17 signals per cell. Categories, the gold
+example and the state table are in the references file.
 
 ## Worked examples
 **A. Roll pressure from AM z-scores (J.P. Morgan, US Bond Futures Rollover Outlook, 12 Aug 2026; 3y lookback).**
@@ -254,7 +296,10 @@ $1,602bn, liabilities $1,949bn, funded ratio 82.2% (check: 1,602 / 1,949 = 82.2%
 | Skew: 3m change above 75th percentile (richening payer RRs) | Core longs may be building; the 10y rose on average next month (+8.8bp), a caution for duration longs (crowded-long risk), not a reason to fade the sell-off | Citi (Flatter skew, Jan 2017) table, 6c |
 | Survey net short with neutrals near top of 1y range | Short base not crowded: do not chase a squeeze | J.P. Morgan (Canary, Feb 2020) |
 | Cumulative put/call above 100% (YTD) | Bearish for the currency against USD in the FX study (more puts bought); confirm pair orientation | BofA (Feb 2021): one year of data |
-| >= 4 of 12 CTA models stopped | Expect above-average sigma moves in that market (shown for S&P futures; same pattern in TY and Bund, 2010 to May 2025) | BofA CTA Monitor (Jun 2025) |
+| >= 4 of 12 CTA models stopped | Expect above-average sigma moves in that market (shown for S&P futures; same pattern in TY and Bund, 2010 to May 2025) | BofA (Systematic Flows Monitor, 2 Jun 2025) |
+| All three CTA lookbacks long (or short) and stretched, unwind trigger inside the 5-day forecast range | Fragile level: a reversal trips many stops at once; size down or wait for the level to clear | BofA (Systematic Flows Monitor, 2 Jun 2025) |
+| CTA long-duration beta rising week on week, long minus short-duration beta falling | CTA duration build with a flattening bias (flow, not level); confirm with the momentum signal | BofA (CTAs impact on the rates market, 18 Aug 2020) |
+| Net speculative % OI beyond +/- 2 sd | Contrarian warning once the price state turns to at risk; with price still trending, no fade (own default, 6i) | BofA (Technicals Explained, 14 Jan 2025) |
 | Two strong auctions in a row | Do not read as bullish; yields rose after in the sample | Citi (Pension plan for 20s, Oct 2026), small sample |
 | Funded status near 100% and a 10y rally of 50bp or more | A rally of that size would push funded status below 100%, and pension duration demand falls after large rallies: expect less long-end support, not a sell program | BofA (Jun 2024 and Nov 2024; sensitivity, not an event) |
 | Any positioning z beyond 2 with price not yet confirming | Wait for a price break, or flag as devil's-advocate material | Willer and Saunders: bonds follow through |
@@ -284,6 +329,9 @@ $1,602bn, liabilities $1,949bn, funded ratio 82.2% (check: 1,602 / 1,949 = 82.2%
 - **Light volume is fragile.** A repricing on light volume reverses on a small shift in flow (J.P. Morgan, Formosa note,
   21 Feb 2020: January volumes were 57% and 24% of 2019 and 2018 levels).
 - **Priced or not.** Check whether the obvious leg is already priced. If it is, trade the second-order leg.
+- **CTA proxies are not the CTA book.** The index behind the replications has survivorship bias, betas decay in a dash for
+  cash (early 2020) and stop thresholds are unpublished, so read the output as an estimate of direction, stretch and
+  trigger distance (BofA, CTAs impact on the rates market, 18 Aug 2020; Systematic Flows Monitor, 2 Jun 2025).
 - **Overlapping returns.** Forward 1m to 6m changes sampled weekly, and 3m changes sampled monthly (the skew table), share
   observations: effective sample size is far smaller than the row count and t-stats are inflated. Use non-overlapping
   windows or HAC errors, and require the sign to hold across sub-periods.
@@ -310,6 +358,7 @@ Return a positioning snapshot for each contract requested, as a table:
 | concentration (top 4, top 8) | and its 1y percentile |
 | AM % OI and roll view | bullish / neutral / bearish, with the z band from the signals table |
 | structural tests 1 to 4 | pass / fail, with R^2 for tests 3 and 4 |
+| COT extreme and CTA state | % OI z vs +/- 2 sd, price state; CTA stops out of 12 and unwind trigger vs 5-day range |
 | data freshness | days since release; stale flag |
 | verdict | roll view, residual (CA or skew), crowding risk, or no positioning signal |
 
@@ -321,7 +370,7 @@ z = above average), the release instant used, and whether any proxy was used.
 ## Scripts
 - [`scripts/flow_positioning.py`](scripts/flow_positioning.py): `release_date`, `rolling_zscore`, `rolling_percentile`,
   `pit_daily` (point-in-time daily view), `valuation_adjusted_flow`, `cumulative_put_call`, `ma_trend_position`,
-  `swap_trade_upper_bound`, and a CLI snapshot of net contracts with z and percentile as of a date:
+  `swap_trade_upper_bound`, `sigma_move` (EWMA-scaled daily move for CTA stop counts), and a CLI snapshot of net contracts with z and percentile as of a date:
   `python scripts/flow_positioning.py --positioning PATH --as-of 2026-11-12 --window 260`.
   `--selftest` checks each function against a known answer (for example the 95% put/call example and the 631 Form PF residual).
 
@@ -349,7 +398,8 @@ z = above average), the release instant used, and whether any proxy was used.
 Market-by-market differences and proxies for markets without public futures positioning are in
 [references/g10-markets-and-proxies.md](references/g10-markets-and-proxies.md). Extra worked numbers (the 2019 roll
 calls, the Form PF path, the callable and lifer supply, the FX intervention episodes) are in
-[references/worked-examples.md](references/worked-examples.md).
+[references/worked-examples.md](references/worked-examples.md). CTA replication and stop-count tables, COT categories
+and the price-state filter are in [references/cta-and-cot-positioning.md](references/cta-and-cot-positioning.md).
 - [quant-systematic-rates-signals](../quant-systematic-rates-signals/SKILL.md): rule-based duration and country signals.
 
 ## References
@@ -382,7 +432,9 @@ calls, the Form PF path, the callable and lifer supply, the FX intervention epis
 - CFTC Office of the Chief Economist - Risk Appetite and Intermediation by Swap Dealers (S. Mixon, E. Onur, OCE Staff Paper 2020-004, Apr 2020): dealer futures as swap-book hedges.
 - Conks (Monetary Mechanics, Substack) - Plumbing Notes: The Post-QT Era (24 Nov 2025; Form PF chart read, low confidence, used only for the dating caution in the worked-examples file).
 - BofA Global Research - UK Rates Viewpoint, "Back to school: tough tests this term" (A. Stengeryte, M. Capleton, 5 Sep 2024): exposure-minus-view sentiment survey.
-- BofA Global Research - Systematic Flows Monitor, "More CTA models = better impact estimates" (C. Kotecha et al., 2 Jun 2025): 12-model stop-loss ensemble, sigma-move definition.
+- BofA Global Research - Systematic Flows Monitor, "More CTA models = better impact estimates" (C. Kotecha et al., 2 Jun 2025): 12-model stop-loss ensemble, model parameters, sigma-move definition, consensus diagnostic, unwind-trigger paths, stop-count table.
+- BofA Global Research - Technicals Explained: In 2025, get to know technical strategy (Primer) (Paul Ciana, Stephen Suttmeier, 14 Jan 2025): COT extremes as contrarian signals, reversal-prone trader categories, price/positioning divergence, weekly trend-state filter.
+- BofA Global Research - US Rates: CTAs impact on the rates market (Bruno Braizinha, 18 Aug 2020): top-down CTA replication by rolling regression on asset-set principal components, duration and curve betas, validation against momentum and CFTC.
 - Willer, D. and Saunders, A. - Trading Global Macro Markets (Wiley Finance, 2026): CFTC z-bucket follow-through for bonds, trend-position model, window robustness.
 - Düring, A. - Fixed Income Trading and Risk Management (Wiley, 2021): OI and TFF reading caveats, PTF misclassification, dealer positioning by market.
 - BofA Global Research - FX Viewpoint, "SDR: What do FX options flows tell us?" (V. Iaralov, H. Du, 1 Feb 2021): cumulative put/call, strike signal, noise filter.

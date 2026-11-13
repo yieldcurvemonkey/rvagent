@@ -1,6 +1,6 @@
 ---
 name: stir-central-bank-balance-sheet-and-reserves
-description: 'Central-bank balance sheet, reserves and money-market plumbing for G10 rates RV. Covers reserve ampleness and scarcity gauges (EFFR-IORB, SOFR-IORB, TGCR-RRP, reserves to bank assets, reserve demand elasticity), the reserve identity (ON RRP, TGA, SRF, discount window, FIMA and foreign repo pool), QE and QT end, reserve-management purchases, debt-ceiling TGA rebuilds, and how these drive SOFR-FF, fed funds, bill-OIS, FX-OIS and cross-currency basis and swap spreads. Use when asked about QE or QT, quantitative tightening, reserves ample or scarce, reverse repo drain, TGA rebuild, standing repo facility stigma, repo above IORB, quarter-end or year-end repo spikes, the lowest comfortable level of reserves, reserve management purchases, or whether the Fed, ECB, BoE, BoJ, RBA or BoC will end QT or add bills. Bill-side debt-limit trades: stir-bills-and-money-market-spreads.'
+description: 'Central-bank balance sheet, reserves and money-market plumbing for G10 rates RV. Covers reserve ampleness and scarcity gauges (EFFR-IORB, SOFR-IORB, TGCR-RRP, reserves to bank assets, reserve demand elasticity), the reserve identity (ON RRP, TGA, SRF, discount window, FIMA and foreign repo pool), QE and QT end, reserve-management purchases, debt-ceiling TGA rebuilds and debt-limit resolution analog event studies, and how these drive SOFR-FF, fed funds, bill-OIS, FX-OIS and cross-currency basis and swap spreads. Use when asked about QE or QT, quantitative tightening, reserves ample or scarce, reverse repo drain, TGA rebuild, standing repo facility stigma, repo above IORB, quarter-end or year-end repo spikes, the lowest comfortable level of reserves, reserve management purchases, or whether the Fed, ECB, BoE, BoJ, RBA or BoC will end QT or add bills. Bill-side debt-limit trades: stir-bills-and-money-market-spreads.'
 ---
 
 # Central-bank balance sheet and reserves
@@ -151,9 +151,27 @@ Sequence (BofA, Funding and debt limit, 27 Jun 2025; Conks, Blindspot Part I, 23
 3. **Resolution.** The TGA rebuild plus a bill deluge drains RRP, then reserves, and tightens funding. SOFR rises against
    FF and IORB. Treasury can also suspend issuance piecemeal (2017: two months, Sep-Dec), which delays the rebuild.
 
-- **Analog choice.** Match on limited ON RRP buffer and similar percentage bill-supply growth. Exclude 2021 and 2023 (large
-  buffers). Averages after the 2017-19 resolutions: SOFR-FF +7.7, +4.4, +5.1bp at 1m, 3m, 6m; SOFR-IORB +3.0, +5.1, +5.7;
-  1m bill-OIS -7.5, -4.0, -9.3 (converted to this skill's sign convention; see section 4b of the [USD reference](references/usd_regimes_and_analogs.md)).
+- **Mechanics.** Before the X-date Treasury runs the TGA down with net issuance frozen, so cash rises, collateral is
+  scarce and funding rates soften. After resolution the TGA rebuild drains cash while a wave of mostly bill supply has
+  to be financed, so funding rates face upward pressure (BofA, Funding and debt limit, 27 Jun 2025).
+- **Analog method.** Step 1: pick episodes by matching state, not calendar. Match on a limited ON RRP buffer and similar
+  percentage growth in bill and total UST supply. Exclude 2021 and 2023 (large buffers). That selects 2017-19; the 2017
+  and 2018 resolutions were five months apart, so count them as one episode. Step 2: measure the average change in each
+  spread over 1m, 3m and 6m after resolution, using a 1m moving average. Study 2019 separately as the funding-stress analog.
+- **Analog averages.** After the 2017-19 resolutions: SOFR-FF +7.7, +4.4, +5.1bp at 1m, 3m, 6m; SOFR-IORB +3.0, +5.1, +5.7;
+  1m bill minus OIS +7.5, +4.0, +9.3 (the source prints OIS minus bill, so its -7.5 means bill cheaper). The averages are
+  plain means of three rows, and the rows differ widely (SOFR-IORB at 1m: -2.0 in 2017, +10.5 in 2018). Per-episode rows
+  are in section 4b of the [USD reference](references/usd_regimes_and_analogs.md).
+- **Stated expectation for a resolution** (BofA, Funding and debt limit, 27 Jun 2025): SOFR-IORB up at least 5-12bp;
+  SOFR-FF wider by 4-8bp; 3m bills against fed funds OIS cheaper by 2-4bp; 2y and 5y UST-OIS mixed. Use these as the
+  range and the three-row averages as the floor of what history delivered.
+- **Scenario ladder.** Add a move to the current level. From the Jun 2025 level, SOFR-IORB -10.0 plus 12.0 reaches +2.0
+  (the 2019 normalisation level, +2.1) and plus 25.1 reaches +15.1 (the 2019 peak-stress level). Table in section 4g of the
+  USD reference. The stress row is one episode that ended in Fed intervention: a tail, not a forecast.
+- **Expression.** Prefer an outright short in one SOFR-FF contract to a SOFR-FF curve trade. The whole strip should
+  cheapen, and a Fed liquidity add (QT end, bill buying) would anchor the later dates and hurt the back of a curve trade.
+  SOFR leads and FF follows with a lag, so FF-based legs can look early. A contract that spans a quarter-end adds
+  convexity to a funding-stress position but muddies a mid-contract read of the resolution effect.
 - **Date risk.** A later resolution, a slower rebuild or a suspension moves the drain. Debt-limit trades carry timing risk.
 - **Current outlook (vintages that disagree).** Citi, 21 Aug 2026: limit about $41.1tn against about $39.9tn of debt
   subject to it, X-date likely Q4 2027. Citi, 2 Oct 2026: limit "expected to bind in Q1/Q2 2027". State which vintage you use.
@@ -253,6 +271,12 @@ Sequence (BofA, Funding and debt limit, 27 Jun 2025; Conks, Blindspot Part I, 23
    reserves rose $32bn (other items about -149 by difference). QT only drained reserves once RRP was empty, so stable
    reserves during QT reflected neutralised cash, not abundance.
 
+10. **Resolution scenario ladder (BofA, Funding and debt limit, 27 Jun 2025).** Jun 2025 starting levels: SOFR-IORB -10.0,
+   SOFR-FF -2.8, 3m bill-OIS -1.6 (source sign). Moves to the 2019 normalisation regime: +12.0, +3.9, +1.8, giving +2.0,
+   +1.1, +0.2. Moves to the 2019 peak-stress regime: +25.1, +13.4, -7.0, giving +15.1, +10.6, -8.6. Each reproduces the 2019
+   average to within 0.1bp. The Oct 2025 trade's 4bp entry-to-target move (example 6) is about the size of the SOFR-FF
+   normalisation move (+3.9), so its target does not need the stress regime.
+
 ## Signals & interpretation
 
 - **EFFR-IORB above 0 persisting beyond month-end** means scarcity. The Fed's stated reaction is to add reserves once
@@ -290,7 +314,10 @@ Sequence (BofA, Funding and debt limit, 27 Jun 2025; Conks, Blindspot Part I, 23
 - **Liquidity-ratio definition.** Some editions put reserves alone over bank assets, others reserves plus ON RRP. The
   13% and 11% bands are quoted for the RRP-inclusive form (Conks, 26 Oct 2025). Compare like with like.
 - **Small analog samples.** The post-resolution averages rest on about two independent episodes (2017-18 count as one,
-  plus 2019, which Fed intervention distorted). Treat them as an order of magnitude, not an estimate.
+  plus 2019, which Fed intervention distorted), although the printed mean divides by three rows. Treat them as an order of
+  magnitude, not an estimate.
+- **Sign flips between exhibits.** The same note prints SOFR-FF as FF minus SOFR and bills as OIS minus bill in one exhibit
+  and the reverse in another. Normalise every figure to the conventions above before combining.
 - **Thresholds are soft.** The abundant line is 13% or 14%. LCLoR runs $2.2-2.9tn. The ample band is 10-13% or 11-13%.
   Use the latest vintage and say which.
 - **The SRF is not a hard ceiling.** SOFR can exceed the top of the range at quarter-end with little take-up. Sep 2024: more
@@ -359,7 +386,7 @@ Return one block per request, with every level date-stamped:
 - NY Fed, Roberto Perli - Speech: Facing Quarter-End Pressures: Understanding the Repo Market and Federal Reserve Tools (12 Nov 2024): ample-reserves framework, SRF design limits, segment map.
 - BofA Global Research - US Rates Primer: Fed policy plumbing '25 edition (Mark Cabana, Katie Craig, 8 Jul 2025): corridor, leaky floor, SRF, technical adjustments, liability identity.
 - BofA Global Research - US Treasury repo primer: 2025 edition (Mark Cabana, Katie Craig, 7 Jul 2025, corrected): two-regime SOFR model keyed to ON RRP size; bank lending soft cap at IORB plus 5-10bp.
-- BofA Global Research - US Rates Watch: Funding and debt limit: history lessons (Mark Cabana, Katie Craig, 27 Jun 2025): debt-limit analog method and trade structure.
+- BofA Global Research - US Rates Watch: Funding & debt limit: history lessons (Mark Cabana, Katie Craig, 27 Jun 2025): debt-limit analog method, per-episode averages, resolution expectation ranges, 2019 scenario ladder and trade structure.
 - BofA Global Research - US Rates Viewpoint: Lower UST WAM => backdoor easing (Meghan Swiber, Mark Cabana, Katie Craig, 2 Jul 2025): TGA rebuild speed, analog spreads, transmission chain.
 - BofA Global Research - US Rates Watch: Funding notes: bill tracking and repo (Mark Cabana, Katie Craig, 8 Aug 2025): ON RRP beta to net bills, MMF exit threshold, post-QT bill buying.
 - BofA Global Research - US Rates Watch: Monthly rates models, Apr 2025 edition (Bruno Braizinha, Katie Craig, 7 Apr 2025): regime-weighted SOFR-IORB model and log fits.

@@ -1,6 +1,6 @@
 ---
 name: macro-fair-value-models
-description: "Macro-factor regression fair values for G10 yields, forwards, curves and spreads. Regress the rate on policy expectations (1y1y OIS, policy rate), growth (PMI/ISM, GDP, forecast revisions), inflation, employment, central-bank balance sheet (QE/QT), global yields, FX/terms of trade and money aggregates (M2, Divisia, P-star). Rolling/expanding out-of-sample fits with HAC t-stats, residual rich/cheap in bp and z, attribution of a move to its drivers, curve-wide PCA-macro fair values, scenario projection and FX-rates linkage. Use when asked: is 10y cheap to fundamentals, macro fair value, what does the macro model say, fair value for 5y5y, was the selloff justified, yields decoupled from drivers, attribute the move, UST/Bund/gilt/JGB/ACGB fair value, yields vs PMI or ISM, rates vs Fed balance sheet, USDJPY vs rate differential, P-star, money growth and inflation, macro residual z-score, rich/cheap vs macro, regression fair value, cross-market 10y screen."
+description: "Macro-factor regression fair values for G10 yields, forwards, curves and spreads. Regress the rate on policy expectations (1y1y OIS, policy rate), growth (PMI/ISM, GDP, forecast revisions), inflation, employment, central-bank balance sheet (QE/QT), global yields, FX/terms of trade and money aggregates (M2, Divisia, P-star). Rolling/expanding out-of-sample fits with HAC t-stats, residual rich/cheap in bp and z, attribution of a move to its drivers, curve-wide PCA-macro fair values, scenario projection and FX-rates linkage. Use when asked: is 10y cheap to fundamentals, macro fair value, what does the macro model say, fair value for 5y5y, was the selloff justified, yields decoupled from drivers, attribute the move, UST/Bund/gilt/JGB/ACGB fair value, yields vs PMI or ISM, rates vs Fed balance sheet, USDJPY vs rate differential, rates-FX co-movement horizon, P-star, money growth and inflation, macro residual z-score, rich/cheap vs macro, regression fair value, cross-market 10y screen."
 ---
 
 # Macro fair-value models for yields and spreads
@@ -167,6 +167,17 @@ toward the current yield, the residual closes without any price move. Scenario t
   regime dummies) and a recent window, and report both.
 - **Short-term version** (JPM, FX Markets Weekly, Aug 2026): FX on the 2y OIS spread and relative terms of trade
   over 2y and 1y windows. Read the residual z, and combine models with R² weights.
+- **Horizon scan for FX-rate drivers** (BofA, FX Quant Primer, 1 Oct 2018). Before fixing the lookback of a change
+  driver in an FX-rates model, scan it. Each week, rank the G10 currencies on FX return and on the driver (cumulative
+  change in the 2y rate; USD return of the national equity index; 12m change for inflation, unemployment and terms of
+  trade). Take the cross-sectional rank correlation, average it over time, and repeat for horizons of 5-52 weeks. Use
+  ranks across the whole cross-section, because factors show up at the extremes (high vs low) and not pair by pair.
+  BofA's 2018 scan put equities first, then rates, terms of trade, inflation and unemployment. The rates-FX
+  correlation was strongest at short horizons, peaking at about 2 months (average about 40%), while equity-FX plateaued
+  at 26-52 weeks and peaked at 6 months (average about 55%). So use a 2y rate change over about 2 months and an equity
+  change over about 6 months as FX drivers. The links broke in 2011, 2013 and 2017. Re-run the scan on your own fit
+  window, and if the rolling rank correlation is near zero, do not read the FX model through to rates. Numbers and a
+  rank-scorecard template are in the [catalogue](references/model_catalogue.md), section 5.
 - **Read-through to rates.** If FX tracks *changes* in the rate differential but not its *level*, something outside
   the policy path is driving it. In Aug 2026 Citi attributed JPY weakness to a rising Japan term premium. In that
   case the rates-relevant question is what compresses the premium (faster hikes, a flatter JGB curve), not whether FX
@@ -297,6 +308,9 @@ More published specifications (curves, breakevens, swap spreads, USDJPY, xccy ba
 - **Residuals persist.** Goldman Sachs warns that spreads can stay wide to fair-value models for some time without
   a macro or fiscal shift (Global Rates Trader: Reaching Limits, Oct 2026). An Ilmanen-style regression forecast of
   UST returns gave IR 0.46, against 0.40 for buy-and-hold: "Valuation—use sparingly" (Willer and Saunders, 2026).
+- **Factor-FX links drift.** Rank correlations of FX with equities, rates, inflation and terms of trade shift by
+  regime: equity-FX at 6m averaged about 55% but was about 47% in 2018, and inflation-FX at 12m averaged −36% and then
+  sat near 0 (BofA, FX Quant Primer, Oct 2018). Re-check a driver's stability before using it in an FX-rates model.
 - **Overfitting.** Scoring an FV model against the next print rewards overfit univariate models (Cotton, 2016).
   Validate out of sample: [bt-validation-and-overfitting](../bt-validation-and-overfitting/SKILL.md).
 - **Model uncertainty is as large as the residual.** BofA's old PCA and new DFM 10y UST fair values differ with an SD
@@ -361,6 +375,7 @@ More published specifications (curves, breakevens, swap spreads, USDJPY, xccy ba
 - BofA Global Research (B. Braizinha) - US Rates Viewpoint: Introducing a new UST macro framework (15 Oct 2024): DFM on 19 macro series to 4 factors, residual SDs by tenor, sensitivity sanity check, failure modes
 - BofA Global Research (A. Zhang, B. Braizinha, R. Axel) - US Rates Primer: UST RV Primer: A hitchhikers guide to RV on the UST curve (2 May 2022): adjusted vs unadjusted macro FV, non-economic buying, PC-beta to yield-beta conversion, sign-restricted BVAR
 - BofA Global Research (B. Braizinha, K. Craig) - US Rates Watch: Monthly rates models, August '25 edition (4 Aug 2025): global 10y state-space model and residual table, debt-limit regime exclusion
+- BofA Merrill Lynch - Global Rates and FX Primer: FX Quant Primer (Vadim Iaralov, Alice Leng, Athanasios Vamvakidis, 1 Oct 2018): rank-correlation horizon scan of FX against rates, equities, inflation and terms of trade, and a rank-scorecard template (catalogue section 5)
 - BofA Merrill Lynch Global Research (E. Satko) - European Rates Viewpoint: Many EGBs, one simple value tool (21 Mar 2018): expanding vs rolling windows, residual screens without fundamentals
 - J.P. Morgan (F. Diamond et al.) - Global Fixed Income Markets Weekly: Reduce outright duration risk but keep long 10Y Eur vs. US (21 Aug 2026): 30y attribution, 5y5y FRI models, UK and cross-market betas
 - J.P. Morgan (F. Diamond, F. Infante et al.) - Monthly Inflation Outlook: A mixed bag of inflation market views (13 Aug 2026): UK/EUR/US inflation FV models, driver-selection rule, regime split

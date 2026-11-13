@@ -57,6 +57,7 @@ Canonical tables are in [schemas](../data-contract-and-adapters/references/schem
   long CTD basis widens in sell-offs. Yields above 6%: longest-duration bond is CTD, long basis widens in rallies. Bases of the middle bonds are straddles/strangles. Near 6% many bonds are
   near-CTD (JPM, Near, far, wherever yields are, 2 Oct 2026). Exceptions to check: US sell-offs keep extending CTD duration, WN sell-offs anchor to the shortest bond and shorten it
   (Barclays, Divergent CTD switch behavior, 20 Aug 2026).
+- **Payoff by construction**: at the end `F = min over the basket of (B/CF)`, so each bond's terminal basis is `B - CF x (CTD price / CTD CF)`; simulate yield shifts and twists to get payoff profiles and set fair net basis as the probability-weighted payoff. A long CTD basis then pays like a straddle: USU5 scenario, CTD 11/43 at +50bp moves to 11/44 (11/43 basis about 6 ticks from 7), at +100bp to 8/50 (11/53 basis worth 61 ticks), at -50bp or more to 2/41 (BofA, US Treasury futures primer, 10 Jul 2025; table in [references/basis-option-cases.md](references/basis-option-cases.md)).
 - **Strike = crossover**: the yield (or spread) at which another bond becomes CTD. Drivers: time to delivery, vol, distance to crossover (CME, 2017). Value peaks where several candidates tie,
   is about zero when one bond is CTD across a wide range (JPM, The switch and the spur, 29 Oct 2026).
 - Hedge ratio caveat: a CF hedge is exact only for the CTD; others need DV01 hedges; re-hedge after about 20-25bp (CME, 2017).
@@ -104,15 +105,16 @@ Replicate the short future with a CF-sized cash short of the rally-CTD plus paye
 The estimate may understate value because the switch payoff does not decay like swaption theta, and it diverges as the contract converges to one CTD (Morgan Stanley, Buy Higher Rates Protection at a 30% Discount, 27 Aug 2026).
 
 ### 7. Wildcard as one-day vol
-- Mechanics: invoice price fixed at the 3pm ET futures close, notice later; deliver after a post-close rally, wait after a sell-off. Rule: exercise is attractive when `GB x CF < (cash now - cash at 3pm) x (1 - CF)` (BofA, US Rates Primer: Treasury futures and basis, 10 Jul 2025); threshold `x* = GB x CF / (1 - CF)` points of cash price (WN example: GB 5/32, CF 0.7342 gives 0.43pt; JPM's one-day form is `GB1/(1 - CF)` with GB1 one day of gross basis).
+- Mechanics: invoice price fixed at the 3pm ET futures close, notice later; deliver after a post-close rally, wait after a sell-off. Rule: exercise is attractive when `GB x CF < (cash now - cash at 3pm) x (1 - CF)` (BofA, US Treasury futures primer, 10 Jul 2025); threshold `x* = GB x CF / (1 - CF)` points of cash price (WN example: GB 5/32, CF 0.7342 gives 0.43pt; JPM's one-day form is `GB1/(1 - CF)` with GB1 one day of gross basis).
 - Vol inputs: listed ATM futures-option vol read as one-day vol; post-close 1bp per 2 hours (1-1.5bp per day), doubled on FOMC days (JPM, Good things come to those who wait, 18 May 2018). Another source triples FOMC-day vol and its note quotes a 6 hour and a 15 hour window: state which you use.
 - Size: ~0.75 tick TU and ~0.5 tick FV (May 2018, range 0.5-1); 0.5-1.5 ticks TN, sometimes FV/TY, and about 3 ticks of WN net basis (Dec 2019). Highest with low CF (low-coupon CTD), high vol, FOMC in the delivery month. A CF near 1 delivers early; CF < 0.9 tends to stay late even at negative basis.
+- Reading of the rule: the wildcard is a roughly 3-hour call on `(1 - CF)` of the CTD, paid for with the gross basis on the `CF` part of the bond; exercising forfeits the remaining net basis (`GB = NB + carry`). Most valuable in FOMC delivery months (press conference at 2:30pm ET, before the 3pm settle) and for low-CF bonds (WNU5 CFs run 0.43 to 0.83) (BofA, US Treasury futures primer, 10 Jul 2025). Worked WN case: [references/basis-option-cases.md](references/basis-option-cases.md) section 5.
 - Treat it as short-dated vega: compare with 1-day or overnight listed vol before accepting a model wildcard value as "the option the basis pays for".
 
 ### 8. Overlays that change the answer
-- **Carry window**: positive carry means price to last delivery; negative carry to first delivery (FV to first, WN to last). Strongly negative carry shrinks the option window to the start of the month; flat carry keeps the whole month (BofA, 2025).
+- **Carry window**: positive carry means price to last delivery; negative carry to first delivery (FV to first, WN to last). Strongly negative carry shrinks the option window to the start of the month; flat carry keeps the whole month. Delivery is a T+2 process (intent, notice, settle), so compute carry to T+2 (BofA, US Treasury futures primer, 10 Jul 2025).
 - **Funding**: use term repo to delivery and the CTD's own special repo. Overnight financing exposes the basis to slope: long basis loses if overnight rises. Basis traders shrug off repo spikes of about 15bp and tolerate at least 50bp, up to 200bp nearer delivery (Conks, The Basis Trade Scare, 17 Nov 2025).
-- **Flows**: asset managers short the basis, levered funds long, similar size; basis cheapens when dealers cannot finance the levered side (BofA, 2025; CFTC Market Risk Advisory Committee, 2024).
+- **Flows**: asset managers short the basis, levered funds long, similar size; basis cheapens when dealers cannot finance the levered side (BofA, US Treasury futures primer, 10 Jul 2025; CFTC Market Risk Advisory Committee, 2024). Negative net basis (options worth about 0, futures rich to the CTD forward) is attributed to asset-manager demand: they sell the basis to levered funds at 0 or below, capped by dealer repo balance sheet.
 - **Squeeze**: negative CTD net basis is not free money when supply is short: price `P(fail) x gap`.
 - **Hedge**: CF-weighted basis has a directional tilt, DV01-neutral basis stops tracking basis P&L. Choose, and near cusps use probability-weighted BPV/CF.
 
@@ -156,7 +158,8 @@ More dated cases, per-currency notes and 2026 levels: [references/basis-option-c
 - **Backtest costs**: historical swaption bid/offer is not firm; swap bid/offer 2y/5y/10y was 0.3bp (2017-18), 0.4bp (2013-16), 1.2bp (2008-09) (Citi, 12 Mar 2018). Include both legs and the Board spread.
 - **Hedge timing**: realised vol depends on the hour of the hedge; keep one snap per series.
 - **Do not extrapolate DOV regressions**: DOV is non-monotonic in yield (peaks at the switch point, falls on both sides).
-- Source licence: one primer cited carries a restriction on AI use; review before relying on it.
+- **Futures are not a bullet bond**: futures track the worst-performing deliverable, so they shorten in rallies and lengthen in sell-offs, giving lower convexity than the CTD cash bond and possibly negative convexity; a delivery-option-adjusted DV01 or convexity hedge must use the probability-weighted CTD, not the current one (BofA, US Treasury futures primer, 10 Jul 2025).
+- **Buying the net basis normally loses the premium**: buy at 1 tick and deliver optimally and you lose about 1 tick, more on a non-CTD, so a long basis needs the options to pay (a move through the crossover), not just convergence (BofA, US Treasury futures primer, 10 Jul 2025).
 
 ## Output
 Return (1) a **basis table**: CTD, NB, TDOV split (switch/EOM/wildcard), OAB, futures rich/cheap in ticks `= -OAB/CF`, OA IRR vs term repo, parameter-set range; (2) a **vol table**: implied switch vol, swaption nvol (CTD tail, same expiry), Board nvol, ratios, realised ratio and gap, cost-per-gamma richness, z-scores; (3) **proposed package**: legs, DV01-neutral notionals, costless strike, pick-up, premium, vega/gamma/theta mismatch,
@@ -200,7 +203,8 @@ stress P&L (level +/-100bp, twist +/-1.5 sd, CTD switch), carry and financing as
 - J.P. Morgan - Near, far, wherever yields are (2 Oct 2026) and Born(e) in the US(A) (31 Jul 2026): DOV levels, factor-scaled BPV.
 - Morgan Stanley - Buy Higher Rates Protection at a 30% Discount (Zhou, Carter, Hornbach, Tobias, Singh; 27 Aug 2026): swaption replication of the embedded option.
 - Citi Research - Rates Vol Lab series (Bikbov, Williams; Chang, Williams, Appeddu; 2016-2026): Board vs CTD-matched swaption method, ratios, conditional spreads, bid/offer.
-- BofA Global Research - US Rates Alpha: Buy futures basis = cheap options (Axel; 10 Apr 2025) and US Rates Primer: US Treasury futures and basis (Axel; 10 Jul 2025): trade idea, wildcard rule, delivery-date convention.
+- BofA Global Research - US Rates Alpha: Buy futures basis = cheap options (Axel; 10 Apr 2025): trade idea.
+- BofA Global Research - US Rates: Primer: US Treasury futures and basis (Ralph Axel, 10 July 2025): wildcard rule and example, delivery-date convention, futures convexity, basis payoff and CTD scenarios, negative net basis and positioning.
 - Barclays Research - US Treasury Futures: Divergent CTD switch behavior in US and WN (Mok, Nashikkar; 20 Aug 2026): CTD by shift, local-curve drivers.
 - RiskVal Financial Solutions / RVFI - Future CTD Scenario Analysis user guide (2023-2024): scenario engine, wildcard induction, EOM option.
 - CFTC Market Risk Advisory Committee - The Treasury Cash-Futures Basis Trade (Dec 2024): stress, margin, crowding.

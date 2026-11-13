@@ -151,23 +151,44 @@ Match the state, not the calendar (BofA, Funding and debt limit: history lessons
 This selects the 2017-2019 resolutions. The 2017 and 2018 resolutions were five months apart and count as one episode.
 Measure averages 1m, 3m and 6m after resolution, using a 1m moving average.
 
-### 4b. Analog averages (BofA, Lower UST WAM, 2 Jul 2025)
+### 4b. Analog averages and per-episode rows (BofA, Funding and debt limit, 27 Jun 2025; Lower UST WAM, 2 Jul 2025)
 
 These are the printed values, with the SOFR convention converted. The source wrote the futures-style spread as
 SOFR/FF (FF minus SOFR), so the printed -7.7 is SOFR-FF = +7.7. Confirm the sign with the source's own statement
-that SOFR/FF tightens 4-8bp after resolution.
+that SOFR/FF tightens 4-8bp after resolution. Each cell is the average change in the 1m, 3m or 6m window after the
+resolution, measured on a 1m moving average of the spread.
 
 | Measure (bp change after resolution) | 1m | 3m | 6m |
 |---|---|---|---|
-| SOFR-FF (printed as SOFR/FF -7.7 / -4.4 / -5.1) | +7.7 | +4.4 | +5.1 |
-| SOFR-IORB | +3.0 | +5.1 | +5.7 |
-| 1m bill-OIS | -7.5 | -4.0 | -9.3 |
-| 3m bill-OIS | -3.6 | -1.5 | -4.2 |
-| 2y UST-OIS | +0.5 | -0.8 | +3.5 |
-| 5y UST-OIS | -0.1 | +0.2 | +3.3 |
+| SOFR-FF, 2017 (printed SOFR/FF 1.9 / -0.4 / -9.6) | -1.9 | +0.4 | +9.6 |
+| SOFR-FF, 2018 (printed -10.0 / -11.7 / -7.7) | +10.0 | +11.7 | +7.7 |
+| SOFR-FF, 2019 (printed -14.8 / -1.0 / +2.1) | +14.8 | +1.0 | -2.1 |
+| **SOFR-FF, average of the three rows** (printed -7.7 / -4.4 / -5.1) | +7.7 | +4.4 | +5.1 |
+| SOFR-IORB, 2017 | -2.0 | +0.7 | +11.2 |
+| SOFR-IORB, 2018 | +10.5 | +15.0 | +12.4 |
+| SOFR-IORB, 2019 | +0.7 | -0.5 | -6.4 |
+| **SOFR-IORB, average of the three rows** | +3.0 | +5.1 | +5.7 |
+| 1m bill-OIS, average (printed as OIS minus bill: negative = bill cheaper) | -7.5 | -4.0 | -9.3 |
+| 3m bill-OIS, average (same print) | -3.6 | -1.5 | -4.2 |
+| 2y UST-OIS, average (printed as OIS minus UST) | +0.5 | -0.8 | +3.5 |
+| 5y UST-OIS, average (printed as OIS minus UST) | -0.1 | +0.2 | +3.3 |
 
-The 2018 row (printed SOFR/FF -10.0 / -11.7 / -7.7; SOFR-IORB 10.5 / 15.0 / 12.4) uses the same convention. The 2019
-3m and 6m figures are distorted by Fed intervention after Sep 2019.
+Reading the table:
+
+- **The averages are plain means of three rows.** The 2017 and 2018 rows come from resolutions five months apart, so
+  the effective sample is two episodes. Checks: (-1.9 + 10.0 + 14.8) / 3 = 7.6 and (-2.0 + 10.5 + 0.7) / 3 = 3.1,
+  which match the printed 7.7 and 3.0 to rounding.
+- **Dispersion is the point.** SOFR-IORB at 1m is -2.0 in 2017 and +10.5 in 2018. The 2017 SOFR-FF 1m row is
+  negative (SOFR did not rise against FF in the first month) and only widens by 6m. Quote the range, not the mean.
+- **Bill-OIS sign.** The two bill-OIS rows are printed as OIS minus bill, so negative means the bill cheapened. In a
+  bill-minus-OIS convention (positive = bill cheap) they read +7.5, +4.0, +9.3 for 1m and +3.6, +1.5, +4.2 for 3m.
+  State the sign next to every figure. The UST-OIS rows are printed as OIS minus UST; they are small (within about
+  4bp) and mixed in sign, so the headline "biased cheaper" is not a precise claim.
+- The 2019 3m and 6m figures are distorted by Fed intervention after Sep 2019.
+
+**Stated expectation for a resolution** (BofA, 27 Jun 2025): SOFR-IORB up at least 5-12bp; SOFR-FF wider by 4-8bp;
+3m bills against fed funds OIS cheaper by 2-4bp; 2y and 5y UST-OIS mixed. The 5-12bp SOFR-IORB range is
+wider and higher than the three-row averages (3.0 to 5.7bp); the individual rows run from -6.4 to +15.0.
 
 ### 4c. TGA rebuild speed (BofA, Short July SOFR/FF, 30 Jun 2025; Lower UST WAM, 2 Jul 2025)
 
@@ -197,6 +218,13 @@ ON RRP one month before and after: 2017 96 to 120; 2023 2,218 to 1,910; 2025 pro
 Bills outstanding six months before and after resolution: 2017 1,750 to 2,266; 2019 2,358 to 2,474; 2023 3,915 to 5,838.
 The 2023 episode is a poor analog for ON RRP buffer reasons (the buffer was about $2.2tn).
 
+More analog inputs (BofA, 27 Jun 2025): the 2025 projection has bills outstanding of about $5.8-6.5tn, running
+6,380 to 6,497 ($bn) between six months before and six months after resolution. Total
+marketable debt in the 2025 projection grows +2% / +4% / +5% at 1m / 3m / 6m after resolution. ON RRP in 2019 was
+near zero; the 2025 projection takes ON RRP from 143 to 80 one month either side of resolution and from 138 to 0 at
+3m, and 2017 fell from 233 to 3 over six months. A small buffer that empties within months is the state the 2017-19
+rows share with the 2025 projection.
+
 ### 4e. The 2025 episode and the 2026-27 outlook (vintages, not a forecast)
 
 - **July 2025:** the OBBBA raised the limit by $5tn. Pre-resolution forecasts: TGA $575bn at end-July, $850bn by mid-September,
@@ -223,6 +251,45 @@ BofA (Funding and debt limit, 27 Jun 2025) proposed shorting the October 2025 SO
 target +8bp, stop +1bp. Rationale given: history shows 4-5bp or more of tightening after resolution; the position
 owns a larger SOFR spike; SOFR leads FF. Risks: later resolution or a slower TGA rebuild. Conks (14 Aug 2025) separately
 expected SOFR to print 6bp over EFFR by October 2025, on the same TGA-rebuild logic. Both are historical calls.
+
+Why that expression (BofA, 27 Jun 2025):
+
+- **Outright over curve.** An outright position in one contract was preferred to a SOFR-FF curve trade. The whole
+  SOFR-FF strip should cheapen as SOFR shifts up, and the timing of any Fed liquidity add (ending QT, bill buying) is
+  hard to call. An add would anchor the later dates, so a curve trade would be hurt at the back.
+- **SOFR leads, FF lags.** Fed funds does move; it follows SOFR with a delay, against the market belief that FF stays
+  put. A trade that is right on direction can look early on FF-based legs.
+- **Quarter-end in the window.** The October contract also covers the Q3 quarter-end, and the Q2 quarter-end SOFR jump
+  with a low TGA supports the case. A reporting date inside the contract period adds convexity to a funding-stress
+  position, but it also makes a mid-contract print a poor read of the resolution effect alone.
+- **Timing.** Enter before the resolution if the risk is that it passes earlier than the base case (early July against
+  a late July or early August base in that note).
+
+### 4g. Resolution scenario ladder from the 2019 regimes (BofA, Funding and debt limit, 27 Jun 2025)
+
+Average levels in the 2019 episode, in bp, in the source's Exhibit 5 sign (positive SOFR-IORB and SOFR-FF = SOFR higher).
+Pre = end-April to end-July 2019; peak stress = end-July to end-September 2019; normalisation = end-September 2019 to
+end-January 2020.
+
+| Measure | Pre | Peak stress | Normalisation |
+|---|---|---|---|
+| 3m bill-OIS (as printed; peak-stress value is negative, which conflicts with the exhibit's stated sign) | -1.2 | -8.6 | +0.2 |
+| SOFR-IORB | +7.2 | +15.1 | +2.1 |
+| SOFR-FF | +3.1 | +10.6 | +1.2 |
+
+Starting from the June 2025 level, the source gave the move needed to reach each regime. The scenario level is the start
+plus the move, and each reproduces the 2019 average:
+
+| Measure | Level, Jun 2025 | Move to normalisation | Level reached | Move to peak stress | Level reached |
+|---|---|---|---|---|---|
+| 3m bill-OIS | -1.6 | +1.8 | +0.2 | -7.0 | -8.6 |
+| SOFR-IORB | -10.0 | +12.0 | +2.0 | +25.1 | +15.1 |
+| SOFR-FF | -2.8 | +3.9 | +1.1 | +13.4 | +10.6 |
+
+Use: price the base case at the normalisation row (SOFR-IORB +12bp, SOFR-FF +4bp from the starting level) and treat the
+peak-stress row as the tail. The +12bp SOFR-IORB move to normalisation is the top of the 5-12bp stated expectation.
+Do not use the stress row as a forecast: it is a single episode in which a Fed intervention followed. The exhibit's
+bill-OIS and spread signs differ from the averages table above; normalise before combining.
 
 ## 5. Bank balance-sheet and regulatory drivers of reserve demand (USD)
 

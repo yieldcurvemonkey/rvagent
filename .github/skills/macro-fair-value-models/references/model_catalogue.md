@@ -71,6 +71,51 @@ Details: [spread-swap-spreads-and-asw](../../spread-swap-spreads-and-asw/SKILL.m
 
 Details: [xccy-basis](../../xccy-basis/SKILL.md).
 
+### Factor sensitivity of G10 FX to rates and other drivers (BofA, FX Quant Primer, 1 Oct 2018)
+
+Method: for each date, rank 10 G10 currencies on FX return and on a factor, take the rank correlation, average over time,
+and repeat across co-movement horizons of 5-52 weeks (2-12 months). FX returns come from a correlation-weighted FX index
+to reduce USD dependence. Data to Aug 2018.
+
+| Factor (driver variable) | Horizon of the strongest link, or change window | Average rank corr. | Latest (2018) | Note |
+|---|---|---|---|---|
+| Equities (USD return of MSCI country index) | plateau 26-52 weeks, peak 6 months | about 55% | about 47% | dips in 2011, 2013, 2017; strongest factor overall |
+| Rates (cumulative 2y rate change) | short horizons, peak about 2 months, fading from about 5 weeks out | about 40% | not stated | second strongest |
+| Terms of trade (12m change) | 12 months | 24% | not stated | |
+| Inflation (12m change) | 12 months | −36% | near 0 | sign is negative on average |
+| Unemployment (12m change) | 12 months | not stated | about 0 | weakest |
+
+Read: FX prices gradual equity rotations more slowly than central-bank rate decisions, so rates are a short-horizon
+driver and equities a long-horizon one. The authors call 2017 a year of broken historical relationships.
+
+Rank-scorecard template (the OCTAVE model, live since 5 Mar 2012): `Rank = Σ_{i=1..4} (z_i + s_i)`, where z_i is the
+1y z-score of factor i and s_i a scorecard value read off the factor's cross-sectional rank (1 = best, 10 = worst).
+The four factors are carry (level of the swap rate), 2-month rates momentum (8-week % change in swap rates), 2-month
+equity momentum (8-week % change) and 2-month contrarian value (44-day average FX / spot, used only when |z| > 1).
+Long the top 3 and short the bottom 3.
+
+| Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Equity momentum | 4 | 4 | 2 | 2 | 0 | 0 | −2 | −2 | −4 | −4 |
+| Carry level | 4 | 3 | 3 | 0 | 0 | 0 | 0 | −3 | −3 | −4 |
+| Rates momentum | 3 | 2 | 1 | 0 | 0 | 0 | 0 | −1 | −2 | −3 |
+| Contrarian value | 2 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | −1 | −2 |
+
+Weekly portfolios opened Monday 5pm EST and closed the following Monday, gross of costs and hypothetical. The model
+held long USD, CAD, JPY against short GBP, EUR, CHF on 24 Sep 2018.
+
+| Model | Window | Portfolios | Up | Hit ratio |
+|---|---|---|---|---|
+| OCTAVE (rates-heavy) | since 2012 | 343 | 181 | 52.8% |
+| OCTAVE | last 12m | 52 | 26 | 50.0% |
+| FORTE (equity-led two-step sort, live since 10 Mar 2014) | since 2014 | 237 | 128 | 54.0% |
+| FORTE | last 12m | 52 | 28 | 53.8% |
+
+Use these as a calibration: a multi-factor macro rank screen on G10 had a weekly hit ratio of only 50-54% gross of costs.
+That supports using macro residuals as a valuation and veto input, not as a stand-alone timing signal. The rank scorecard
+is a template for ranking markets on rate drivers, see
+[quant-zscore-and-signal-screening](../../quant-zscore-and-signal-screening/SKILL.md).
+
 ## 6. Money aggregates (P-star)
 
 Source: Hudson Bay Research, A return to monetarism? (Ireland, Miran, Roubini, Jul 2026).

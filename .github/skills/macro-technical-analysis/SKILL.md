@@ -1,12 +1,12 @@
 ---
 name: macro-technical-analysis
-description: Technical, trend, momentum and event-timing overlays for G10 rates relative value (govvies, swaps, STIR and bond futures, curve and fly spreads; USD EUR GBP JPY CAD AUD NZD CHF SEK NOK). Covers moving-average trend and crosses (55d, 200d, golden or death cross), 1m/12m momentum consensus, RSI, MACD, Bollinger, ADX regime, ATR stops, support, resistance and Fibonacci levels, yield momentum dummy, skew-change timing, and rule-based timing after sell-offs, inversions, FOMC and payrolls. Use when the user asks about trend, momentum, overbought or oversold, RSI, MACD, moving average, golden cross, breakout, support or resistance, chart levels, technical entry or exit, is the trend intact, stop placement, trend-follower or CTA flows, or whether a rates trade is technically confirmed.
+description: Technical, trend, momentum and event-timing overlays for G10 rates relative value (govvies, swaps, STIR and bond futures, curve and fly spreads; USD EUR GBP JPY CAD AUD NZD CHF SEK NOK). Covers moving-average trend and crosses (55d, 200d, golden or death cross, TMAC, weekly MA states), 1m/12m momentum consensus, RSI, MACD, Bollinger, stochastics, ADX regime, ATR stops, Ichimoku, TD Sequential, Market Profile, chart patterns, support, resistance, Fibonacci and Elliott levels, yield momentum dummy, CTA stop-out flows, positioning triad (MAA), COT extremes, skew-change timing and rule-based timing after sell-offs, inversions, FOMC and payrolls. Use when the user asks about trend, momentum, overbought or oversold, RSI, MACD, moving average, golden cross, breakout, head and shoulders, Ichimoku, TD Sequential, Market Profile, support or resistance, chart levels, technical entry or exit, is the trend intact, stop placement, CTA flows, or whether a rates trade is technically confirmed.
 ---
 
 # Macro technical analysis for G10 rates RV
 
 Technical tools in rates behave differently from equity technicals. Bond yields mean-revert more often and trend less
-than commodities or equities, and the tools are only as good as the sign convention and regime they are applied in. This
+than commodities or equities (BofA, Technicals Explained, 14 Jan 2025), and the tools are only as good as the sign convention and regime they are applied in. This
 skill turns the tools into testable overlays: a trend or momentum read to confirm, size or time an RV idea that another
 skill has already found. It is not a stand-alone signal. Most published rules for rates show modest information ratios,
 large sensitivity to parameters, and gains that come mainly from lower volatility rather than higher return.
@@ -18,20 +18,22 @@ large sensitivity to parameters, and gains that come mainly from lower volatilit
 - Timing an entry or exit after a sell-off, an inversion, a policy meeting or a payrolls print.
 - Whether trend-following (CTA) flows or stop-outs could push a level through a technical support or resistance.
 - Choosing between a trend rule, a mean-reversion rule and no technical overlay for a given market regime.
+- Chart patterns (head and shoulders, double top, cup and handle), Ichimoku, TD Sequential exhaustion counts, Market Profile levels,
+  or a golden or death cross read together with the slope of the 200-day average.
 
 ## Inputs (data-agnostic)
 
 | Input | Canonical table | Granularity and history | Notes |
 |---|---|---|---|
 | Futures settlement prices, continuous and back-adjusted at rolls | `fut_quotes` (bond futures) or `stir_quotes` (price = 100 - rate) with `fut_static`; continuous via `roll_map` | daily settle, at least 300 days for the 252-day consensus | `price_px` in decimal price per 100; back-adjust additively (price differences) with the roll rule in fut-calendar-roll, never splice raw contracts. A STIR price rises when the rate falls (price basis = long duration). Yield-quoted contracts leave `price_px` null: they are a yield series, so apply the yield sign and no percentage filters |
-| Daily high and low (for ATR and ADX) | not in the canonical tables | daily | ask the data adapter for OHLC; without it use the close-only fallbacks in Method 1 and 5 |
+| Daily high and low (for ATR and ADX) | not in the canonical tables | daily | ask the data adapter for OHLC (also needed for Ichimoku, TD Sequential and Market Profile: period highs and lows, intraday for finer profiles); without it use the close-only fallbacks in Method 1 and 5 |
 | Par swap rates by tenor | `curve_par` (`start = 0D`) | daily EOD, at least 300 days | `par_rate_pct` is percent; convert to bp (x100) before any bp rule |
 | Zero rates and discount factors | `curve_zero` | daily, same snap as `curve_par` | use `zero_rate_pct` for zero-rate triggers |
 | Spreads and flies | built from `curve_par` or read from `swap_spreads` | daily | state the spread sign convention in the output (section Method 0) |
 | Policy meetings and event calendar | `cb_meetings`, `calendars` | scheduled dates with decision timestamp | the event-day rules need the decision timestamp, not the date |
 | Macro releases with consensus | `macro_series` (`value`, `consensus`, `pub_ts_utc`) | one row per release vintage | use the first release for event-surprise rules |
 | Implied and normal vol | `vol_surface`, `opt_quotes` | daily, `nvol_bp` | for vol-scaled stops; the 25bp risk reversal is `nvol_bp` at `strike_offset_bp` +25 (payer) minus -25 (receiver), expiry 3M, tenor 10Y |
-| Positioning | `positioning` | weekly | used only as a confirmer, see section Method 7 |
+| Positioning | `positioning` | weekly | used only as a confirmer (including CFTC-style extremes), see section Method 7; the release time, not the position date, is the signal time |
 
 If a series is missing, short or unadjusted at rolls, ask for it or hand off to the data adapter. Never fill in numbers.
 The -25 and +75 economic-surprise thresholds are in the units of the index used in the source; rescale them to the index you hold before use. Every signal is computed on data up to the close of day t and traded at t+1 or later.
@@ -59,6 +61,11 @@ are the tools for a trend, oscillators for a range. Using a trend tool in a rang
   did. Use it to classify the regime, and confirm any exit with the MA slope, not with ADX alone.
 - Confluence: a signal counts when price, the trend horizon and the event context agree. Several indicators on the same
   price are one piece of evidence, not several.
+- Regime-to-tool map (BofA, Technicals Explained, 14 Jan 2025): trending markets take moving averages, Ichimoku, MACD and ADX; range-bound markets take RSI and stochastics;
+  parabolic or stretched markets take candles, TD Sequential, long-term trend lines, divergences and log charts. The primer reads ADX below 20 as range,
+  20-25 as transition and above 25 as trending, with ADXR (a moving average of ADX): a trend starts when ADX below 20 crosses above ADXR and ends when ADX
+  at about 40 crosses below it. That set differs from the 20 and 30 cut-offs above only at the upper end: state which one you use. Because rates mean-revert more
+  often, range tools carry more weight on rates than on commodities. Full map in [references/trend_momentum_systems.md](references/trend_momentum_systems.md).
 
 **2. Trend and moving averages.**
 - Default lengths: 55-day MA for the medium trend (about 2.5 months); 200-day MA for the regime. The 55-day rule on a
@@ -77,7 +84,19 @@ are the tools for a trend, oscillators for a range. Using a trend tool in a rang
   1 to 12 month horizons (Moskowitz, Ooi and Pedersen, 2012, external).
 - Use EMA when speed matters: `EMA_t = (1 - a) EMA_{t-1} + a x_t`, `a = 2/(span+1)`. Span 49 is the 50-day EMA (mu = 0.96).
 - The trend is a regime filter, not a timing tool. Crosses are useful context; as a stand-alone entry and exit they
-  give back much of the trend.
+  give back much of the trend (BofA, Technicals Explained, 14 Jan 2025: good for context, not necessarily an entry and exit strategy).
+
+**2b. Cross conditioning, TMAC and weekly states** (BofA, Technicals Explained, 14 Jan 2025).
+- Condition every golden or death cross on the slope of the 200-day. On a long bond future (price, from 1977), 34 golden crosses were higher 68% of the time at 40-50 days
+  (average +1.44% at 45 days); with a rising 200-day (14 signals) 12 of 14 (86%) were up at 45-50 days, average +2.49% at 45 days. The 34 death crosses had down ratios of only 36-53%:
+  no stand-alone short signal. A dollar-index golden cross with a rising 200-day was up 21 of 23 (91%) at 45 days; in oil the slope conditioning reversed the result. Tables, small samples
+  and the source's own inconsistencies are in [references/trend_momentum_systems.md](references/trend_momentum_systems.md).
+- TMAC (10, 20 and 30-day): nine conditions scored +1 or -1 (price against each MA, each MA against the others, each slope), sum -9 to +9. Long above 0 and short below 0; or scale in thirds at a sum of at least 3,
+  6 and 9 and out at 5, 2 and 0, trading only when the 200-day slope agrees. Ties score 0, so the printed thresholds can occur (`tmac_sum`).
+- Weekly MA states (13, 26, 40 and 200 weeks): slope matters more than position. Close above a rising MA is bullish (buy dips); below a rising MA bullish-at-risk; below a falling MA bearish (sell rallies);
+  above a falling MA bearish-at-risk. Trends are strongest when all timeframes agree. The primer shows it on equities: test it on the rates series.
+- Long-horizon averages are levels too: the 200-month SMA capped the 2016-18 US 10y yield bear market at about 3.25%. An MA fan (20, 50, 100, 150, 200) gives 20 conditions and a fanned-out set means a strong trend;
+  the EMA signals earlier than the SMA, so test the type per asset class.
 
 **3. Momentum consensus and yield momentum dummy.**
 - Consensus on a price index (JPM, 2012): `+1` if above both SMA21 and SMA252; `-1` if below both; `0` otherwise.
@@ -96,33 +115,63 @@ are the tools for a trend, oscillators for a range. Using a trend tool in a rang
   Applied to a yield series, a low RSI means yields have fallen fast and the receive is crowded ("over-received"); a high RSI
   means the reverse. A 2019 EUR note called the short end "technically overreceived" on RSI; a 2020 EUR 10y reading of 36.93
   was neutral (Nordea Markets, 2019 and 2020).
-- In a trend, shift the bands (common practice, heuristic): 40-80 in an uptrend, 20-60 in a downtrend. A pullback that
-  holds above the lower band is trend continuation, not a sell signal.
+- In a trend, shift the bands (BofA, Technicals Explained, 14 Jan 2025): 40-80 in an uptrend, 20-60 in a downtrend. A pullback that
+  holds above the lower band is trend continuation, not a sell signal. RSI failing at 60 in a downtrend (40 in an uptrend) means the trend is intact; breaking it suggests the trend is ending.
+- Divergence: a three-trough bullish or three-peak bearish divergence in RSI, stochastics or the MACD histogram is the preferred signal; a two-trough divergence is often premature (BofA, Technicals Explained, 14 Jan 2025).
+- Stochastics (%K, %D; 75 and 25) and Williams %R (above -20 overbought, below -80 oversold; the authors prefer 28 periods) are range tools: act on the exit from the zone, not the entry (BofA, Technicals Explained, 14 Jan 2025).
 - Overbought is not an exit. Nordea (26 Sep 2025) cited overbought RSI and crowding for a receiver, and its rule was to
   re-underwrite a position near its stop when the forecast changes. RSI alone is not the reason to close.
 - MACD: `line = EMA12 - EMA26`, `signal = EMA9(line)`. The zero-line cross equals an EMA cross, so it adds no information
   beyond the trend. Use the histogram only as a momentum-turn flag.
 - Bollinger(20, 2): mid = SMA20, bands = mid +/- 2 sample SD20. Narrow bandwidth followed by a close outside a band is a
-  breakout candidate (Aikin, 2012 notes bands narrowing before large moves). Exit at the mean is late; use the opposite band
-  or a time stop.
+  breakout candidate (Aikin, 2012 notes bands narrowing before large moves). Exit at the mean is late (BofA, Technicals Explained, 14 Jan 2025); use the opposite band
+  or a time stop. %B above 1 is outside the upper band, 0.5-1 between mean and upper, 0-0.5 between mean and lower, below 0 outside the lower band.
 
 **5. Levels, patterns and stops.**
 - Support is prior demand, resistance is prior supply. Labels are in price terms; sources disagree on yield charts (one calls lower yields
   "resistance", another "support"), so write the level as a yield and say which side is the rally. Levels with more tests, on a longer timeframe and in a wider zone
-  matter more (heuristic; widely used). Use the pattern objective or a Fibonacci extension as the target and a level
+  matter more (BofA, Technicals Explained, 14 Jan 2025: time, number of tests, depth (a 3-4% zone beats 1%) and volume; broken resistance becomes support). Use the pattern objective or a Fibonacci extension as the target and a level
   just beyond the last swing as the stop.
-- Trend-line break needs a filter, because a single close through a line is often noise (heuristic). Require any of: a
-  close beyond the line by a fixed fraction (for example 1% on a price index, or 0.5 x ATR in bp), two consecutive closes
-  beyond, or a failed retest on lighter volume.
-- Measured move: subtract the height of the prior move from the breakout point (heuristic).
-- Fibonacci retracements (38.2%, 50%, 61.8%) of the last major swing, drawn only from major turning points. They are
-  reference levels, not forecasts (heuristic, no quantitative test in the sources).
+- Trend-line break needs a filter, because a single close through a line is often noise (BofA, Technicals Explained, 14 Jan 2025). Require any of: a
+  close beyond the line by 1% (price index) or by more than one ATR, above-average volume, two consecutive closes
+  beyond, or a failed retest on lighter volume. A good line has several touches spaced in time and a slope of about 30 to 50 degrees; draw it on a log chart
+  if price is more than 30% from the start. A fraction of an ATR (for example 0.5 x ATR in bp) is a tighter heuristic of this skill, not the primer's.
+- Measured move: subtract the height of the prior move from the breakout point (BofA, Technicals Explained, 14 Jan 2025).
+- Fibonacci retracements (38.2%, 50%, 61.8%) of the last major swing, drawn only from major turning points. Ratios 23.6, 38.2, 50, 61.8 and 76.4%: from a top `level = High - r x (High - Low)`, from a bottom `Low + r x (High - Low)`; extensions 100, 161.8, 300 and 361.8% of the pattern height (BofA, Technicals Explained, 14 Jan 2025). They are
+  reference levels, not forecasts (no quantitative test in the sources).
 - Stops: `stop = entry - k x ATR14` for a long and `entry + k x ATR14` for a short of the SERIES TRADED (`k` = 2 is a common default,
   heuristic). On a yield series a receive is long price, so its stop is the entry yield `+ k x ATR` and a pay's is `-`. ATR: `TR = max(H-L, |H - prevC|, |L - prevC|)`.
   For a close-only series `TR = |dP|`, which is only about half the OHLC value (0.8 vs 1.6 sigma): double it, or use `k` = 4. A stop at a
   structural level is preferred when it is tighter than the ATR stop.
 - Futures levels are contract-specific: a CTD switch changes the futures price-yield map, so a level read on one contract or basket does not carry across a roll or switch (During, 2021). Technical analysis has no systematic false-positive analysis and can be self-fulfilling, so treat levels as places other participants watch, not as forecasts.
-- Sizing and scale-in: scale in and out by thirds, using structural levels as stops, not the mean.
+- Sizing and scale-in: scale in and out by thirds, using structural levels as stops, not the mean (BofA, Technicals Explained, 14 Jan 2025).
+- ATR trailing stops (BofA, Technicals Explained, 14 Jan 2025): long stop = prior low - ATR, short stop = prior high + ATR, raised or lowered as the trend moves; a spike in ATR above its own 2-SD band or an ATR divergence can mark a turn.
+
+**5b. Pattern reads** (BofA, Technicals Explained, 14 Jan 2025); rules, targets and cases in [references/patterns_levels_and_structure.md](references/patterns_levels_and_structure.md).
+- Head and shoulders needs a prior trend, three peaks with the head highest, a flat or slightly sloping neckline, a right shoulder no bigger than the left and a decisive neckline break. The retest on light volume is the second
+  entry, the stop is the right-shoulder high, the target is the head-to-neckline height from the break. Both the 50% and 61.8% retracements reached is "high conviction". On the US 10y yield an early-1980s monthly top
+  marked the start of the secular bond bull market and a 2019-2022 bottom its end (confirmed in 2022).
+- Double top or bottom: target is the pattern height; scale in by thirds (speculative after the second turn, on the confirmed break, on the retest). Cup and handle: the handle retraces 38.2-50% (at most 61.8%) of the
+  cup rally and the target is the breakout plus the cup depth.
+- Outside reversal (engulfing) needs a prior trend and is stronger above a rising 200-day or at a level, with RSI stretched and volume rising on bar 2. Candles (doji, hammer, harami, piercing line, stars) only
+  confirm a level. An island reversal is an exhaustion gap plus a breakaway gap.
+- Patterns are drawn in price terms: on a yield chart mirror them and write levels as yields. On a futures series a roll gap is not a pattern gap.
+
+**5c. Exhaustion and trend-state systems** (BofA, Technicals Explained, 14 Jan 2025); formulas in [references/trend_momentum_systems.md](references/trend_momentum_systems.md) and [references/patterns_levels_and_structure.md](references/patterns_levels_and_structure.md).
+- Ichimoku: conversion line = 9-period midpoint, base line = 26-period midpoint; leading spans = their average and the 52-period midpoint, shifted forward 25 periods to form the cloud; the lagging line is shifted back 25.
+  Signals: price leaving the cloud, span and conversion/base crosses, cloud thickness as support or resistance. Needs high and low.
+- TD Sequential: setup 9 = nine closes beyond the close four bars earlier (a pause of one to four bars); countdown 13 = twelve bars with the close beyond the extreme two bars earlier, with bar 13 beyond countdown bar 8.
+  TDST lines and the TD risk level give stops. A 9 near a 13, or signals on daily and weekly together, are stronger. Use it to tighten a stop or stop adding, not as a stand-alone fade.
+- Trender (an EMA of the midpoint offset by a fraction of ATR) works as a trailing stop. TrendStall (rate of change of ADX; above 15 is a strong trend, a falling rate of change above 15 flags a stall) marked four stalls on the long bond
+  future in the 2021-22 sell-off.
+- Elliott: five waves with the trend then a-b-c; wave 2 stays above the start of wave 1, wave 3 is not the shortest, wave 4 does not overlap wave 1 (futures are lenient). Use a wave objective only with a level that agrees.
+- Relative price and confirmation: tops and bottoms in a relative (spread or ratio) price often lead the absolute price, and Dow-style confirmation signals come late by design.
+
+**5d. Market Profile levels** (BofA, Technicals Explained, 14 Jan 2025); examples in [references/patterns_levels_and_structure.md](references/patterns_levels_and_structure.md).
+- A distribution of price over time: markets move slowly through time when range-bound and fast through price when trending. The point of control (POC) is the price reached most often (time at price, not volume);
+  the value area holds 70% of the distribution; the initial balance is the first two periods.
+- Trading above the initial balance or the value-area high suggests an uptrend may start, below suggests a downtrend. A double distribution tends to fill its gap, with targets at the value areas and POCs. Overlapping POCs
+  and value-area edges across about ten profiles mark confluence. Price moving too far too fast into a key level is a reversion trade. Build profiles on the traded futures contract and re-draw after a roll.
 
 **6. Event and cycle timing (rule-based; compute the statistic, do not eyeball it).**
 - Sigma on an event day: the move divided by the standard deviation of the previous 21 daily changes, today excluded (`sigma_move_rolling`; the EWMA
@@ -147,12 +196,25 @@ are the tools for a trend, oscillators for a range. Using a trend tool in a rang
   0.26 for the 5y swap alone, active IR 1.01, in the market 27.5% of the time. Counter-indicator fading the extremes failed.
 - Hiking-cycle timing (Willer & Saunders, 2026): 2y returns turned poor about 55 to 75 trading days before the first hike; pay the 2y about three months before it;
   press receivers about three months before the first cut. Cycle dating belongs to macro-central-bank-reaction-functions.
+- Calendar priors (BofA, Technicals Explained, 14 Jan 2025): on the US 10y yield since 1963, a January rise was followed by higher yields in February-March 70% of the time (average +34bp), but February-March was up in 66% of all years (computed),
+  so the edge over the base rate is small; after a rise in the first five days yields tended to fall in the rest of January. The January, first-five-day, presidential-cycle and dollar-index tables are in
+  [references/positioning_flow_and_calendar.md](references/positioning_flow_and_calendar.md). Treat them as a soft prior: no significance tests, small samples, and the primer shows the S&P 500 January barometer decaying from 80-90% before 2000 to 50-60% since.
 
-**7. Flow overlay (confirmer only).** Trend-follower flows are largest when many trend models share a signal and an
-unwind trips stops together. In a twelve-model ensemble (three lookbacks x four stop thresholds, crosses of 21 to 252 days), days on which at least
-4 of 12 models stopped out had above-average absolute sigma moves across equity index, Treasury, Bund, commodity and FX futures, 2010 to May 2025 (BofA Global Research, Systematic Flows Monitor, Jun 2025). The models
-are proxies of real CTAs, and the benchmark index has survivorship bias. Check the positioning table and the level where trend models would change sign. Do not fade
-trend-follower positioning on its own. The flow mechanics belong to flow-positioning-cftc-and-surveys.
+**7. Flow and positioning overlay (confirmer only).** Trend-follower flows are largest when many trend models share a signal and an
+unwind trips stops together.
+- Stop-out ensemble: a twelve-model ensemble (three lookbacks x four stop thresholds; short-term = MA crosses of 21 to 100 days, long-term = crosses of 50 to 252 days, medium = equal weight; risk-parity sizing; a stop is a prescribed loss
+  from a high-water mark). Days on which at least 4 of 12 models stopped out had above-average absolute sigma moves across equity index, Treasury, Bund, commodity and FX futures, 2010 to May 2025
+  (BofA, Systematic Flows Monitor, 2 Jun 2025). The largest flows come from unwinds, not accumulation. The models are proxies of real CTAs, and the benchmark index has survivorship bias. Check the positioning
+  table and the level where trend models would change sign.
+- Top-down CTA positioning (BofA, CTAs impact on the rates market, 18 Aug 2020): regress a benchmark CTA index's returns on the first principal component of each asset set (equities, longer bonds, shorter bonds, metals,
+  energy, FX or the dollar index) over a rolling 2-month window. The long-duration beta is the duration bias; long-duration beta against short-duration beta is the curve bias (long the long feature and short the short is a flattener).
+  The week-on-week change in beta is the flow signal. Cross-checks: a 15 to 20 day lead-lag against a multi-crossover momentum signal, and about 60% correlation with CFTC net non-reportable 10y futures positions.
+- Positioning triad (BofA, FX Quant Primer, 1 Oct 2018; FX-derived, untested on rates): MAA = share of the 28 pairwise cross signals that are bullish among the price and its 5, 10, 20, 30, 50, 100 and 200-day averages (`ma_aggregator`);
+  uptrend above 60, downtrend below 40. With the percentiles of up/down vol (UD) and residual skew (RS), a reversal is likely when all three are above 80 in an uptrend or below 20 in a downtrend, and unlikely when UD and RS are
+  below 50 (uptrend) or above 50 (downtrend). Stretched trends hold when the direction of vol agrees with the trend. A rates version of the skew leg uses the 25bp risk reversal from `vol_surface` against yield changes (adaptation).
+- CFTC extremes (BofA, Technicals Explained, 14 Jan 2025): the speculative net position as a share of open interest beyond 2 standard deviations of its mean is a contrarian flag, used only with price-trend confirmation; a divergence between the price trend and
+  the positioning trend can flag a turn.
+Do not fade trend-follower positioning on its own. The flow mechanics belong to flow-positioning-cftc-and-surveys. Model definitions, validation and statistics are in [references/positioning_flow_and_calendar.md](references/positioning_flow_and_calendar.md).
 
 **8. Test before reporting.** A technical overlay is accepted only after this test.
 - Event study: for each signal `s_t != 0`, compute `s_t (x_{t+1+h} - x_{t+1})` (entry one session after the signal) at h = 5, 20, 45, 80 days; on a yield series with a
@@ -192,6 +254,14 @@ Figures are as printed in the cited source unless marked "computed".
 7. **Expected return of a trend rule (computed).** Daily sigma 5bp, rho 0.05, no drift: E(r) = 0.798 x 5 x 0.05 = 0.20bp per day.
 8. **Event-study sign (computed).** A 10y yield falls 1bp a day and a duration signal is +1. Over h = 5 the signed change must be +5bp (`x_is_yield`), hit rate 1. Without the flip
    the same signal shows -5bp and a hit rate of 0: the usual symptom of a yield read as a price.
+9. **Golden cross with a rising 200-day (BofA, Technicals Explained, 14 Jan 2025).** Long bond future, 14 signals: up 12 of 14 (86%) at 45-50 days, average +2.49% at 45 days, against +1.44% over all 34 golden crosses. The always-long base rate is not printed:
+   read the result as a context filter.
+10. **TMAC sum (computed, windows shortened to 2, 3 and 4 for hand arithmetic).** Series 1, 2, 3, 4, 6, 5: price 5 is below MA2 5.5 (-1), equal to MA3 5.0 (0) and above MA4 4.5 (+1); MA2 > MA3 > MA4 (+3); all three MAs rising (+3). Sum = +6.
+11. **MAA (computed).** 25 of the 28 pairs bullish gives MAA 89%, above 60: an uptrend. With UD at the 85th and RS at the 90th percentile all three are above 80, so a reversal is likely and a long needs a tighter stop.
+12. **Fibonacci bounce (computed).** A 10y yield falls from 4.50% to 3.50%. The 38.2% bounce is 3.50 + 0.382 x 1.00 = 3.882% and the 61.8% bounce is 4.118%: yield levels where a rally would be tested.
+13. **Calendar base rate (computed).** US 10y yield, 61 Januarys: a rise in January was followed by a rise in February-March in 23 of 33 cases (70%), but February-March rose in (23 + 17) / 61 = 66% of all years, so the edge over the base is about 4 points.
+14. **Range from scenario levels (BofA, 10y rates and the Monty Hall problem, 6 Aug 2024).** Range top at the soft-landing level (4-4.25%), bottom at the midpoint between the hard-landing level (3%) and the soft-landing level: about 3.5%.
+    The top and bottom are re-drawn when a new fact removes scenarios (here an early first Fed cut). Scenario likelihoods belong to macro-regime-and-scenario-analysis.
 
 ## Signals & interpretation
 
@@ -211,6 +281,15 @@ Figures are as printed in the cited source unless marked "computed".
 | 10y sell-off | more than 70bp from the low | run the peak checklist (breakevens, 5s30s, oil); no timing rule is given |
 | Skew change percentile | above 75th / below 25th | payers richening (yields up next month) / flattening (yields down); tail-edge warning only |
 | Economic surprise index | below -25 / above +75 | receive / pay 5y (with IR and time-in-market caveats) |
+| Golden cross, price series | 50d above 200d, 200d rising | long-duration context (long bond future: 86% up at 45-50d); not an exit rule |
+| Death cross, price series | 50d below 200d | no stand-alone edge on a bond future (down ratios 36-53%); condition on the 200d slope |
+| TMAC sum | above 0 / below 0; extremes at +9 / -9 | trend long / short; scale by thirds; the 200d slope must agree |
+| Weekly MA state | close above or below a rising or falling MA | bullish / bullish-at-risk / bearish / bearish-at-risk; buy dips or sell rallies by state |
+| MAA with UD and RS (FX-derived) | all above 80 in an uptrend, all below 20 in a downtrend | reversal risk; UD and RS below 50 in an uptrend means the trend is likely to continue |
+| Net speculative position, share of open interest | beyond +/-2 SD of its mean | contrarian flag, needs price-trend confirmation |
+| Trend-model stop-outs (12-model ensemble) | 4 or more stopped out | above-average sigma moves: flow-driven unwind risk; review stops |
+| TD Sequential | setup 9, countdown 13 | tighten the stop or stop adding; not a stand-alone fade |
+| Market Profile | price above initial balance or value-area high / below | an uptrend may start / a downtrend may start; POC and value area are the targets |
 
 Interpretation rules: a technical signal confirms only when it agrees with the RV signal's direction and horizon. A signal
 that disagrees is a reason to reduce size or wait, not to flip the trade, unless a stop has been hit.
@@ -235,6 +314,11 @@ that disagrees is a reason to reduce size or wait, not to flip the trade, unless
   point-in-time series before trusting a long Sharpe.
 - **Data snooping.** Out-of-sample results should be fixed before the test. Never re-fit after seeing the out-of-sample result. The Salomon authors attribute the gap between in-sample and out-of-sample returns to snooping, and their forecasts were wrong in about 40% of months.
 - **Re-underwriting.** A receiver near its stop is re-underwritten when the forecast changes, not held by default.
+- **Crosses as entry and exit.** Golden and death crosses give back much of the trend when used for both; the death cross on a bond future showed no edge, and conditioning on the 200-day slope can reverse a result (oil).
+- **Premature divergence.** A two-trough or two-peak divergence is often early: wait for the third or a level confirmation.
+- **Time at price is not volume.** The Market Profile POC measures frequency at a price. Do not read it as a volume profile.
+- **FX statistics.** The MAA, up/down vol, residual skew and momentum-persistence numbers are FX: port the construction, not the thresholds, until tested on the rates series.
+- **Calendar priors.** The primer's US 10y and dollar-index tables have no significance tests and small samples, and they decay. Compare each conditional rate with its unconditional rate before using it.
 
 ## G10 market notes
 - **USD.** Trend on the 7-10y index worked on risk, not return. Drawdowns in the long history tracked hiking cycles (median -9.0%).
@@ -246,10 +330,14 @@ that disagrees is a reason to reduce size or wait, not to flip the trade, unless
   rule: JGB exposure only when the US 10y yield is below its 55-day MA (IR 0.90 vs 0.28 above, Willer & Saunders, 2026).
 - **CAD, AUD, NZD, CHF, SEK, NOK.** No rates-specific technical test is in the sources for these markets. Apply the same
   tools to their own curves, test locally, and do not transfer USD thresholds without a test.
-- **Calendar effects** (January and month-end patterns) are owned by quant-seasonality-and-calendar-effects. Do not use them here.
+- **Calendar effects.** General January, month-end and seasonal screens are owned by quant-seasonality-and-calendar-effects. This skill carries only the primer's US 10y January, first-five-day and presidential-cycle
+  tables as soft priors (Method 6) and does not extend them to other calendar effects.
 
 Detail, the full recipe table, sourced cases and extra pitfalls are in
 [references/indicator_recipes_and_cases.md](references/indicator_recipes_and_cases.md).
+Longer tables and rules: [references/patterns_levels_and_structure.md](references/patterns_levels_and_structure.md) (support and resistance, patterns, Fibonacci, Elliott, Market Profile),
+[references/trend_momentum_systems.md](references/trend_momentum_systems.md) (cross event tables, TMAC, weekly states, oscillators, Ichimoku, TD Sequential) and
+[references/positioning_flow_and_calendar.md](references/positioning_flow_and_calendar.md) (CTA models, positioning triad, CFTC rule, calendar tables).
 
 ## Output
 For each candidate idea, return one row per series or structure:
@@ -271,9 +359,9 @@ A verdict of "against" is a stop-or-wait instruction, not a reversal.
 
 ## Scripts
 - [`scripts/tech_indicators.py`](scripts/tech_indicators.py): SMA, EMA, Wilder RSI, MACD, Bollinger, true range, ATR, ADX (needs high and low),
-  momentum consensus, yield momentum dummy, EWMA and rolling sigma moves, Fibonacci levels, Acar expected trend return, and a
+  momentum consensus, yield momentum dummy, TMAC sum and moving-average aggregator (MAA), EWMA and rolling sigma moves, Fibonacci levels, Acar expected trend return, and a
   signal-forward event study (one-session entry lag, yield sign flip, n / h, always-long base). `python -I scripts/tech_indicators.py --selftest` checks hand-computed answers
-  (RSI by hand, MACD against a reference recursion, Bollinger, ATR, ADX, consensus including ties and a mixed case, dummy both signs, sigma move, Acar drift and exponential terms,
+  (RSI by hand, MACD against a reference recursion, Bollinger, ATR, ADX, TMAC and MAA by hand, consensus including ties and a mixed case, dummy both signs, sigma move, Acar drift and exponential terms,
   event-study lag and sign) and that no indicator changes when later data are appended.
   The CLI reads one series with a `date` column and a value column; `--yield-pct` marks a yield in percent, adds the bp dummy and reads the consensus on the negated yield.
   The CLI does not roll futures or build spreads: do that upstream with the tables above.
@@ -309,7 +397,11 @@ A verdict of "against" is a stop-or-wait instruction, not a reversal.
 - Salomon Brothers - Understanding the Yield Curve, Part 4: Forecasting U.S. Bond Returns (Aug 1995): yield momentum dummy with 5bp band and 10bp neutral range, out-of-sample sign accuracy.
 - Dunis, C., Laws, J. and Naim, P. (eds.) - Applied Quantitative Methods for Trading and Investment (Wiley Finance, 2003): EMA recursion, Acar expected trend return, Markov vol-filtered trend rule.
 - Aikin, S. - STIR Futures: Trading Euribor and Eurodollar Futures (2nd ed., Harriman House, 2012): RSI, ADX thresholds, Bollinger and ATR use, decision-support caveat.
-- BofA Global Research - Systematic Flows Monitor: More CTA Models = Better Impact Estimates (Kotecha et al., 2 Jun 2025): CTA ensemble, stop-out count versus sigma move.
+- BofA Global Research - Systematic Flows Monitor: More CTA Models = Better Impact Estimates (Kotecha et al., 2 Jun 2025): CTA ensemble, lookback and stop definitions, stop-out count versus sigma move, unwind triggers.
+- BofA Global Research - Technicals Explained: In 2025, get to know technical strategy (Primer) (Paul Ciana, Stephen Suttmeier, 14 Jan 2025): regime-to-tool map, support and resistance, trend lines, patterns, golden and death cross event tables, TMAC, weekly MA states, oscillators, Ichimoku, TD Sequential, Fibonacci, Elliott, Market Profile, CFTC contrarian rule, US 10y and dollar-index calendar tables.
+- BofA Merrill Lynch - Global Rates and FX Primer: FX Quant Primer (Vadim Iaralov, Alice Leng, Athanasios Vamvakidis, 1 Oct 2018): moving-average aggregator, up/down vol, residual skew, momentum persistence (FX-derived).
+- BofA Global Research - US Rates: CTAs impact on the rates market (Bruno Braizinha, 18 Aug 2020): top-down CTA duration and curve positioning from principal-component betas, validation against momentum and CFTC data.
+- BofA Global Research - US Rates Watch: 10y rates and the Monty Hall problem (Bruno Braizinha, 6 Aug 2024): trading range set from scenario levels and re-drawn when scenarios are ruled out.
 - During, A. - Fixed Income Trading and Risk Management: The Complete Guide (Wiley Finance, 2021): technical-analysis caveats (false positives, CTD switches, self-fulfilling levels).
 - Nordea Markets (Vainikainen) - EUR Rates Flash (23 May 2019): RSI screen and "trade the trend" caveat.
 - Nordea Markets (Vainikainen) - EUR Rates Flash (5 Feb 2020): 14-day RSI 36.93 reading and range levels on the 10y swap.

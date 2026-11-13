@@ -1,6 +1,6 @@
 ---
 name: quant-systematic-rates-signals
-description: "Builds rule-based systematic signals for outright duration timing and cross-market (country) allocation in G10 rates (USD EUR GBP JPY CAD AUD NZD CHF SEK NOK 10y swaps, bond futures): carry-to-risk (10y-3m slope over EWMA vol, percentile-scaled), bond price momentum (1m and 12m trend), contrarian equity momentum, macro momentum (manufacturing PMI, earnings revisions, unemployment), slope reversal and real-yield ranking, combined into a fixed-weight duration score that scales a risk budget or overlays an RV book. Use when asked for a systematic or rules-based duration call, 'long or short duration?', tactical duration, a duration overlay, trend following, CTA-style or time-series momentum (TSMOM) in yields, carry-to-risk, value and momentum in bonds, macro or PMI momentum for bonds, a cross-market 10y swap long-short, country allocation, real-yield or slope-reversal pairs, a duration scorecard, or how to tilt the residual beta of RV trades."
+description: "Builds rule-based systematic signals for outright duration timing and cross-market (country) allocation in G10 rates (USD EUR GBP JPY CAD AUD NZD CHF SEK NOK 10y swaps, bond futures): carry-to-risk (10y-3m slope over EWMA vol, percentile-scaled), bond price momentum (1m and 12m trend), contrarian equity momentum, macro momentum (manufacturing PMI, earnings revisions, unemployment), slope reversal and real-yield ranking, combined into a fixed-weight duration score that scales a risk budget or overlays an RV book. Use when asked for a systematic or rules-based duration call, 'long or short duration?', tactical duration, a duration overlay, trend following, golden/death-cross trend scores, CTA positioning and stop-out risk, time-series momentum (TSMOM) in yields, carry-to-risk, value and momentum in bonds, macro or PMI momentum for bonds, a cross-market 10y swap long-short, country allocation, real-yield or slope-reversal pairs, a duration scorecard, or how to tilt the residual beta of RV trades."
 ---
 
 # Systematic rates signals: duration timing and cross-market allocation
@@ -77,6 +77,21 @@ carry level itself is the trade.
 Defaults are from J.P. Morgan, Simple rules to trade duration, Oct 2012, kept unchanged in every later update.
 Lookback-by-lookback IRs are in [rule-sets-and-track-records](references/rule-sets-and-track-records.md).
 
+**Trend variants for the momentum slot** (tables and rule sets: sections 10-11 of the same reference). Build every
+trend rule on the return index, so + = long duration: a golden cross on a bond price is a death cross on the yield.
+- **Graded MA score (TMAC):** three moving averages (10/20/30d) give 9 conditions (price vs each MA, each MA vs the
+  others, slope of each), summed to -9..+9. Go long above 0 and short below 0, or scale in by thirds at >=3, >=6 and
+  =9. Trade only when the 200d slope agrees (BofA, Technicals Explained, 14 Jan 2025). The primer reports no
+  performance for these rule sets.
+- **Condition crosses on the 200d slope.** On the long bond future (since 1977) 34 golden crosses were followed by
+  higher prices 68% of the time at 40-50 days, but 12 of 14 (86%, average +2.5% at 45 days) when the 200d average was
+  also rising. Death crosses had little edge (down 36-53%). Use them as context, not as a stand-alone entry and
+  exit (BofA, Technicals Explained, 14 Jan 2025).
+- **Regime gate:** ADX below 20 = range, above 25 = trend. Give the trend variants weight only in trend regimes
+  and test a reversion rule in range regimes. The primer's rule of thumb is that rates mean-revert more often than
+  commodities or equity indices, so choose lookbacks and the MA type (EMA reacts earlier) per market rather than
+  copying equity defaults (BofA, Technicals Explained, 14 Jan 2025).
+
 ### 3. Combine
 `Score_m = 0.35 C2R + 0.20 Mom + 0.15 (PMI + Rev + Eq)` per market, where C2R is the position
 `4 (p - 0.5)` from the table above, not the raw ratio. The G10 aggregate is the simple average
@@ -117,6 +132,13 @@ bp per month = 2.6 x carry + 7.4 x change in slope + 2.2 x real yield (per 100bp
 (J.P. Morgan, Rule-based Fixed Income Monthly, Nov 2012). Use it to translate a signal gap into an expected bp
 drift, not as a fitted model to trade.
 
+**Rank-to-score and filter sorts.** Instead of a pure rank, map each factor's rank to a fixed score (for example
+carry level, 10 ranks: 4, 3, 3, 0, 0, 0, 0, -3, -3, -4), add the 1y z-score and sum across factors. A two-step sort
+first ranks on a slow driver, then re-sorts the top and bottom groups on faster scores, so no trade fights the slow
+driver. This is a conditional blend. Both come from weekly G10 FX models (hypothetical, gross of costs) and are
+untested in rates here; treat them as patterns (BofA, FX Quant Primer, 1 Oct 2018; scorecards and track records in
+section 12 of the reference).
+
 Alternative specifications (the Salomon regression timing model with its duration-target mapping, moving-average
 trend on a bond index, the data-surprise rule, scorecard format) are in section 8 of
 [rule-sets-and-track-records](references/rule-sets-and-track-records.md).
@@ -150,6 +172,9 @@ trend on a bond index, the data-surprise rule, scorecard format) are in section 
   Apr 2015).
 - **Spec noise:** rerun with the rebalance day shifted 1-20 days. 3m momentum IR ranged 0.3-0.7 on that choice
   alone. Report the range, not the best day.
+- **Hit counts for pairs:** besides the hit ratio (share of periods with a positive long-short return), count how
+  many long legs beat the equal-weighted basket of the short legs: longs +3% and +0.5% against shorts of +0.5% each
+  score 1 of 2 (BofA, FX Quant Primer, 1 Oct 2018).
 - **Out-of-sample:** expanding-window only; see [bt-validation-and-overfitting](../bt-validation-and-overfitting/SKILL.md).
 
 ## Worked examples
@@ -202,9 +227,22 @@ beta 0.0.
 - **Crowding check:** when trend followers are already at an extreme in the signal's direction, the asymmetry is
   against adding. Long-end CTA positioning at -2.28 sigma implied little extra selling and a sharp short cover
   on a rally (Citadel Securities, Out of the Woods? A More Constructive Outlook for Fixed Income, Aug 2026). See
-  [flow-positioning-cftc-and-surveys](../flow-positioning-cftc-and-surveys/SKILL.md). To estimate trend-follower
-  positioning yourself, run moving-average crosses over a fast family (21-100d) and a slow one (50-252d) (BofA
-  Global Research, Systematic Flows Monitor, Jun 2025).
+  [flow-positioning-cftc-and-surveys](../flow-positioning-cftc-and-surveys/SKILL.md).
+- **Estimating trend-follower positioning.** Bottom-up: run moving-average crosses over a fast family (21-100d) and
+  a slow one (50-252d), medium = equal blend, risk-parity sizing, and a stop from the high-water mark; 3 lookbacks x 4
+  stop levels = 12 models. Biggest flows come from unwinds, not accumulation, and the risk is greatest when all
+  three lookbacks are similarly positioned and stretched. On days when 4 or more of the 12 models stopped out, S&P
+  futures moved more than average, and the same monotone pattern (more stop-outs, larger moves) held for 10y
+  Treasury and Bund futures; the 4-of-12 cut-off itself was stated for equities, and the stop levels are not
+  published (BofA, Systematic Flows Monitor, 2 Jun 2025). Top-down: a rolling 2-month regression of a CTA index on
+  the first principal component of each asset group; the long-duration beta is the duration bias and long minus
+  short-duration beta the curve bias, read through week-on-week changes (BofA, CTAs impact on the rates market,
+  18 Aug 2020). Both are proxies of the average CTA. Details: section 11 of the reference.
+- **Trend maturity.** The share of the 28 pairwise crosses among spot and 5/10/20/30/50/100/200d averages that are
+  bullish (MAA) labels a trend (above 60 up, below 40 down). In G10 FX an extended uptrend gained strength a week
+  later only 44% of the time and an extended downtrend bounced 55%; stretched trends held when the direction of
+  vol agreed. Apply it to the return index as a stretch flag, not a signal (FX evidence; BofA, FX Quant Primer,
+  1 Oct 2018; section 12 of the reference).
 - **Scorecard display:** map each component to -5..+5 by percentile rank within its own history (2y, except
   fair-value models) (J.P. Morgan,
   Global Fixed Income Markets Weekly, Aug 2026). Rank-based displays are not comparable across markets; never
@@ -220,6 +258,11 @@ beta 0.0.
   1990s). When policy or inflation drives both assets the correlation turns positive and the signal loses. Default
   (not from source): halve its weight while the rolling 1y correlation of daily 10y bond (receiver) returns and
   equity returns is above 0. Use bond returns, not yields: the yield-equity correlation has the opposite sign.
+- **Trend crosses as a black box.** Golden and death crosses give back much of the trend when used as entry and
+  exit, the event samples are small (14-17 signals once conditioned on the 200d slope), and conditioning can reverse
+  the sign of a result (it did for oil). Report the count with every hit rate. Exit trend positions with an ATR
+  trailing stop (long: prior low minus ATR; short: prior high plus ATR) or on the signal; a trend-line break needs a
+  filter such as a close 1% beyond the line or a break larger than the ATR (BofA, Technicals Explained, 14 Jan 2025).
 - **Range-bound and sell-off markets** defeat 1m-and-12m momentum (it needs prolonged weakness to turn short).
   Post-crisis policy-driven whipsaws hurt it. A neutral band (for example +/-5bp around a 6m moving average of the
   yield) cuts flips (Salomon Brothers, Understanding the Yield Curve Part 4, Aug 1995).
@@ -309,7 +352,10 @@ beta 0.0.
 - Dirk Willer, Alex Saunders - Trading Global Macro Markets (Wiley, 2026): moving-average trend rules on a bond index, valuation regression verdict, data-surprise trend rule, vol targeting
 - J.P. Morgan (Francis Diamond et al.) - Global Fixed Income Markets Weekly (21-22 Aug 2026): percentile-rank scorecard of macro, fair-value, positioning and momentum signals for 10y and 2s10s
 - Citadel Securities (Frank Flight) - Out of the Woods? A More Constructive Outlook for Fixed Income (25 Aug 2026): CTA positioning simulation and the asymmetry it implies
-- BofA Global Research - Systematic Flows Monitor: More CTA Models = Better Impact Estimates (2 Jun 2025): trend lookback families (21-100d, 50-252d) for replicating systematic positioning
+- BofA Global Research - Systematic Flows Monitor: More CTA Models = Better Impact Estimates (2 Jun 2025): trend lookback families (21-100d, 50-252d), 12-model lookback-by-stop ensemble, sigma-move definition, stop-out count vs size of move
+- BofA CTA research: "US Rates: CTAs impact on the rates market" (Bruno Braizinha, 18 Aug 2020): top-down CTA replication by rolling regression on principal-component features, duration and curve bias from betas, validation against momentum and positioning data
+- BofA Global Research - Technicals Explained: In 2025, get to know technical strategy (Primer) (Paul Ciana, Stephen Suttmeier, 14 Jan 2025): golden/death-cross event study on the long bond future, 10/20/30d triple-MA score, ADX regime gate, weekly MA trend states, ATR stops
+- BofA Merrill Lynch - Global Rates and FX Primer: FX Quant Primer (Vadim Iaralov, Alice Leng, Athanasios Vamvakidis, 1 Oct 2018): rank-to-score scorecard and two-step filter sort, moving-average aggregator and up/down-vol positioning proxies, momentum persistence (FX evidence)
 - Goldman Sachs FICC and Equities (IRP Market Strats, desk material) - Global Rates Best Trade Report (30 Sep 2026): carry / entry / trend screen and quadrant logic for combining value with momentum
 - Richard Grinold, Ronald Kahn - Active Portfolio Management (2nd ed., McGraw-Hill, 1999): combining correlated signals, IC_com = IC sqrt(2/(1+gamma)), time-series vs cross-sectional scores
 - Rishi K. Narang - Inside the Black Box (3rd ed., Wiley, 2024): linear vs conditional alpha blending, trend-follower hit rates

@@ -126,6 +126,36 @@ def momentum_consensus(price: pd.Series, short: int = 21, long: int = 252) -> pd
     return out
 
 
+def tmac_sum(price: pd.Series, windows=(10, 20, 30)) -> pd.Series:
+    """Triple moving-average cross sum, -9..+9 for three windows (BofA Technicals Explained): nine conditions
+    scored +1 / -1 / 0: price vs each SMA (3), each SMA vs each longer SMA (3 pairs: shorter above = +1), and
+    the slope of each SMA (3). Slope is MA_t - MA_{t-1} (an implementation choice; the source gives none).
+    Ties score 0, so even sums occur and thresholds such as 6, 2 and 0 are reachable. On a PRICE series
+    positive = bullish price = long duration; for a yield pass the negated yield. NaN until the longest SMA exists."""
+    w = sorted(windows)
+    mas = [sma(price, n) for n in w]
+    parts = [np.sign(price - m) for m in mas]
+    parts += [np.sign(mas[i] - mas[j]) for i in range(len(w)) for j in range(i + 1, len(w))]
+    parts += [np.sign(m.diff()) for m in mas]
+    out = sum(parts)
+    out[mas[-1].isna() | mas[-1].shift(1).isna() | price.isna()] = np.nan
+    return out
+
+
+def ma_aggregator(price: pd.Series, windows=(5, 10, 20, 30, 50, 100, 200)) -> pd.Series:
+    """Moving-average aggregator (MAA, BofA FX Quant Primer, 2018) in percent: the share of pairwise comparisons
+    among [price, SMA(w) for w in windows] in which the shorter-horizon series is above the longer-horizon one
+    (ordering: price, then ascending windows; ties are not bullish: an implementation choice). The default 7
+    windows give 8 series and 28 pairs; 100 = all bullish, 50 = 14 of 28. Source labels: uptrend above 60,
+    downtrend below 40. NaN until the longest SMA exists. Same sign rule as tmac_sum (price series)."""
+    series = [price] + [sma(price, n) for n in sorted(windows)]
+    pairs = [(i, j) for i in range(len(series)) for j in range(i + 1, len(series))]
+    bull = sum((series[i] > series[j]).astype(float) for i, j in pairs)
+    out = 100.0 * bull / len(pairs)
+    out[series[-1].isna() | price.isna()] = np.nan
+    return out
+
+
 def momentum_dummy(yield_bp: pd.Series, n: int = 126, band_bp: float = 5.0) -> pd.Series:
     """Yield momentum dummy on a YIELD series in bp: +1 if the yield is more than band_bp BELOW its
     n-period MA (bond bullish), -1 if more than band_bp ABOVE, 0 inside the band (whipsaw filter).
@@ -312,6 +342,20 @@ def selftest() -> int:
     mixed = pd.Series(np.concatenate([np.full(231, 200.0), np.full(21, 100.0), [150.0]]))
     check("consensus mixed (above 1m, below 12m) == 0", momentum_consensus(mixed).iloc[-1] == 0.0)
 
+    # TMAC by hand, windows (2, 3, 4) on 1,2,3,4,6,5: price 5 vs MA2 5.5 / MA3 5.0 / MA4 4.5 = -1, 0, +1;
+    # MA2 > MA3 > MA4 = +3; MA slopes (5.5 vs 5.0, 5.0 vs 4.333, 4.5 vs 3.75) all up = +3; sum = 6.
+    tm = pd.Series([1.0, 2.0, 3.0, 4.0, 6.0, 5.0])
+    check("tmac sum by hand == 6", tmac_sum(tm, (2, 3, 4)).iloc[-1] == 6.0)
+    check("tmac ramp == +9, falling ramp == -9, flat == 0",
+          tmac_sum(inc).iloc[-1] == 9.0 and tmac_sum(dec).iloc[-1] == -9.0
+          and tmac_sum(pd.Series(np.full(300, 100.0))).iloc[-1] == 0.0)
+    check("tmac NaN before the longest SMA exists", np.isnan(tmac_sum(inc.iloc[:25]).iloc[-1]))
+    # MAA by hand, windows (2, 3): series price 5, MA2 5.5, MA3 5.0. Pairs: (price, MA2) no, (price, MA3) tie = no,
+    # (MA2, MA3) yes -> 1 of 3 = 33.33.
+    check("maa by hand == 33.33", _close(ma_aggregator(tm, (2, 3)).iloc[-1], 100.0 / 3.0, 1e-9))
+    check("maa ramp == 100, falling ramp == 0 (28 pairs)",
+          ma_aggregator(inc).iloc[-1] == 100.0 and ma_aggregator(dec).iloc[-1] == 0.0)
+
     y = pd.Series([400.0] * 200 + [420.0])  # yield jumps 20 bp above its flat MA
     check("momentum dummy: yield far above MA = -1", momentum_dummy(y, n=126, band_bp=5.0).iloc[-1] == -1.0)
     yd = pd.Series([400.0] * 200 + [380.0])  # yield 20 bp below its flat MA: bond bullish
@@ -374,7 +418,7 @@ def selftest() -> int:
     for name, f in [("sma", lambda s: sma(s, 55)), ("ema", lambda s: ema(s, 26)), ("rsi", rsi_wilder),
                     ("macd", lambda s: macd(s)["hist"]), ("bollinger", lambda s: bollinger(s)["pct_b"]),
                     ("consensus", momentum_consensus), ("dummy", lambda s: momentum_dummy(s, 126, 2.0)),
-                    ("sigma_move", sigma_move), ("adx", lambda s: adx(s + 1, s - 1, s)["adx"])]:
+                    ("sigma_move", sigma_move), ("tmac", tmac_sum), ("maa", ma_aggregator), ("adx", lambda s: adx(s + 1, s - 1, s)["adx"])]:
         check("no look-ahead: " + name, _same(f(px).iloc[:300], f(px.iloc[:300])))
 
     # CLI path: a falling yield (percent) must read as +1 long duration under --yield-pct.
@@ -413,6 +457,8 @@ def run_csv(path: str, value_col: str, out: str | None, yield_pct: bool) -> pd.D
     res["boll_pct_b"] = bollinger(x)["pct_b"]
     # consensus is read on a price: under --yield-pct the series is a yield, so negate it (+1 = long duration)
     res["momentum_consensus"] = momentum_consensus(-x if yield_pct else x)
+    res["tmac_sum"] = tmac_sum(-x if yield_pct else x)
+    res["maa_pct"] = ma_aggregator(-x if yield_pct else x)
     if yield_pct:
         res["yield_momentum_dummy"] = momentum_dummy(x * 100.0, n=126, band_bp=5.0)
     if out:
