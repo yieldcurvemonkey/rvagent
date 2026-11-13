@@ -1,0 +1,72 @@
+# Conditional trades: extra cited examples and per-market detail
+
+Companion to [SKILL.md](../SKILL.md). Numbers are as printed in the cited notes (bp unless stated); where a note is
+internally inconsistent the inconsistency is flagged. All are historical, illustrative and not recommendations.
+
+## 1. Citi conditional-curve screen rows (pick-up = curve + vol; notionals shorter tail = 100)
+
+| Trade (date, close) | Notionals | Spot | Fwd | Strike | Pctile | Impl/Real beta | Curve + Vol = Total | 3m roll | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| 3y 10s30s bear steep (9 Dec 2016) | 100/41.9 | 31.7 | 3.8 | -5.0 | 1st | -0.07 / 0.04 | 27.9 + 8.8 = 36.7 | +1.0 | Citi, 12 Dec 2016 |
+| 3y 10s30s bear steep (6 Jan 2017) | - | 22.6 | -0.2 | -12.4 | 0th | - | 22.8 + 12.2 = 35.0 | +0.9 | Citi, 9 Jan 2017 |
+| 3y 10s30s bear steep (13 Jan 2017) | 100/41.1 | 24.4 | 1.7 | -10.9 | 0th | -0.11 / 0.00 | 22.7 + 12.5 = 35.2 | +0.9 | Citi, 17 Jan 2017 |
+| 2y 1s2s bull steep (1 May 2017) | 100/50.7 | 18.5 | 8.8 | 1.5 | 11% | 0.09 / 0.10 | 9.8 + 7.3 = 17.1 | +0.5 | Citi, 1 May 2017 |
+| 2y 1s2s bull steep (15 May 2017) | - | 18.1 | 10.0 | 3.1 | 14% | - | 8.1 + 6.9 = 15.0 | +0.5 | Citi, 15 May 2017 |
+| 3y 5s30s bear steep (Mar 2019) | 100/22.2 | 33.6 | 27.2 | 14.4 | 5% | -0.16 / -0.26 | 6.3 + 12.9 = 19.2 | +1.2 | Citi, 25 Mar 2019 |
+| 3y 5s30s bear steep (25 Sep 2019) | 100/19.9 | 21.8 | 23.2 | 15.9 | 6% | - | -1.4 + 7.3 = 5.9 (derived) | - | Citi, 25 Sep 2019 |
+| 3y 5s30s bear steep (16 Jan 2020) | 100/20.7 | 32.0 | - | 13.8 | - | - | total ~18.1 | - | Citi, 17 Jan 2020 |
+| 3y 10s30s bear steep (27 Mar 2020) | 100/35.6 | 13.2 | 2.4 | 0.2 | 3rd | - | 10.8 + 2.2 = 13.0 | +0.8 | Citi, 30 Mar 2020 |
+| 3m 2y30y bear steep (2 Oct 2026) | 100/12.2 | 27.6 | 18.5 | 5.7 | - | -0.33 / -0.52 | 9.1 + 12.8 = 21.9 | - | Citi, 5 Oct 2026 |
+
+Notes: the 1y 2s10s example in SKILL.md (S -102.3, F -23.3, K -57.6) is the same screen in Jun 2023. The 27 Mar 2020 row
+appears in the same note with forward 6.5 (30 Mar text) vs 2.4 (derived total 13.0); the arithmetic above uses the version
+that reproduces the printed total. In Jan 2017 the entry improved because the forward 10s30s flattened after the
+election even though spot steepened, a reminder that pick-up moves with forwards as well as strikes. The 1s2s trade's
+entry worsened between recommendation and May 2017 as the curve steepened.
+
+## 2. Conditional flies (rows)
+- 3m 2s3s5s receiver fly, notionals 74.5/100/30.6 (17 Jan 2017): spot -2.4, forward -2.0, >2 sigma cheap on 3m z; richens if the market prices a less hawkish Fed. Earlier read (9 Jan 2017): weights 74.7/100/30.6, spot -2.5, forward -1.9, belly 0.5bp ITM, strike fly -1.5, total long-belly pick-up +1.1, roll +1.2 (Citi, 17 Jan 2017; 9 Jan 2017).
+- 3m 1s3s5s receiver fly (1 May 2017), notionals 147.7/100/30.5: spot 5.9, forward 5.2, 1y rich/cheap -2.8bp (z -2.2), belly 3.6bp OTM, vol pick-up 3.6, total 4.3, roll +4.4. Thesis: fade a dovish Fed (Citi, 1 May 2017).
+- 6m 2s5s10s receiver fly (14 Jan 2019), notionals 120.9/100/26.5: spot -10.1, forward -8.4, forward fly vs belly -6.9bp (z -2.5), belly OTM 2.9bp, strike fly -11.3 (3m z -2.0, 7th percentile); short-belly pick-ups curve -1.7, vol +2.9, total +1.2, roll -0.2 (Citi, 14 Jan 2019). The note prints richness as 3.6 sigma in the text and 2.6 in the table.
+- 3m 10s20s30s payer fly (Dec 2016), notionals 89.0/100/37.2: spot 11.3, forward 10.5, strike 10.6 (34th percentile), fly vs belly -2.3bp; short the belly while protected in a rally (Citi, 12 Dec 2016).
+- 3m 3s7s15s payer fly rich (9 May 2019), notionals 112.0/100/25.5: spot -8.1, forward -6.8; main risk de-correlation of the fly with rates (Citi, 9 May 2019).
+- 3m 5s10s30s payer fly (Sep 2019): wing notionals 97.0/100/19.2, spot -4.6, forward -3.7, correlation with belly 34% (changes) and 92% (levels) (Citi, 25 Sep 2019). Oct 2026 USD 10y20y30y notionals 80.1/100/40.7 (Citi, 5 Oct 2026).
+
+## 3. J.P. Morgan trade lists (premium-neutral unless stated; P&L as printed at the stated note date)
+- Reds/Blues conditional bear steepener (Sep 2018): long $1bn 3Mx(3Yx1Y) mid-curve payer (2.98%, 11.7c) vs short $990mn 3Mx(1Yx1Y) (3.08%, 11.8c); -1.6bp. 3M 2s/10s/30s conditional receiver fly: short $100mn 3Mx10Y OTM receiver (2.841%, 72.4c) vs long $262mn 3Mx2Y ATMF (20c) and $9.6mn 3Mx30Y ATMF (224c), risk weights 0.577 / -1.0 / 0.228; -0.3bp (JPM, 14 Sep 2018).
+- 6Mx20Y: long $100mn 25-delta payers (1.94%, 135c) vs short $93mn 6Mx10Y (1.77%, 71.5c) and $35.6mn 6Mx30Y (1.95%, 196c): 50% risk weight on belly, equal-delta wings; thesis 10s/20s/30s fly renormalises in a sell-off as variable-annuity hedging reverses; -6.1bp in the open-trade list (JPM, 23 Aug 2019 and 13 Sep 2019).
+- 3M 2s/10s conditional bear steepener (Jan 2020): sell $500mn 3Mx2Y ATMF payers (1.33%, 23.2c) vs buy $86.54mn 3Mx10Y ATMF payers (1.47%, 134c): -3.7bp in Feb, -2.1bp (28 Feb) and -1.6bp (6 Mar 2020); a take-profit payer spread on the 10Y leg gave +5bp (JPM, 31 Jan 2020; 28 Feb 2020; 6 Mar 2020).
+- 1Y 2s/10s/30s OTM conditional receiver fly (21/28 Feb 2020): $100mn 1Yx10Y 20-delta receivers (0.92%, 88c) vs $258mn 1Yx2Y 25-delta receivers (0.80%, 22.7c) and $11.2mn 1Yx30Y 25-delta receivers; P&L -3.1bp (21 Feb), -10.1bp (28 Feb), +1.5bp (6 Mar). The notes describe the 10Y leg as both "sell" and "short" and the wings as "sell" in the trade table: the sign is internally inconsistent; treat the prose (term-premium trade) as intent (JPM, 21 Feb 2020; 28 Feb 2020).
+- 30Y/10Yx10Y forward flattener: receive $185mn 30Yx10Y (1.70%) vs pay $125mn 10Yx10Y (2.09%) at -39bp; 1y slide -4bp; +3.0bp (Feb 2020), -0.6bp (Jan 2020) (JPM, 21 Feb 2020; 31 Jan 2020). Rationale: no natural payer at the long end.
+
+## 4. Bassman structures
+- MBS skew ladder (Apr 2013): buy 100mm 5y5y payer 3.65% (98 nv), sell 100mm 4.50% (106 nv), sell 100mm 5.50% (116 nv); zero cost, flat delta/gamma, positive carry, max payoff between 4.50% and 5.50%, lower-bound breakeven 6.35%; 5y5y at 3.00%, par MBS ~2.50%; the 18 nv of skew across the ladder is the edge (Bassman, "Skewered by Skew", 17 Apr 2013).
+- Vol-ratio conditional bear flattener (Apr 2013): buy 100mm 18m-into-5y payer K 2.25% (79 nv) vs sell 53mm 18m-into-10y payer K 3.26% (88 nv), zero cost at a 90% vol ratio, target >= 10 nv vega profit; the 6m5y/6m10y ratio was 70% vs 105% pre-ZIRP average (same note).
+- "Best rates trade" (Sep 2013, ZIRP into 2015): sell 100mm 2y-into-8y20y payer K 4.75% (~92 nv), buy 100mm 10y-into-20y payer K 4.75% (~71 nv), paying 400bp; synthetic forward vol mid-60s; first-year roll 160bp; worth at least its cost if 8y20y is within +-150bp of strike at first expiry (Bassman, "How High is High", 17 Sep 2013).
+- Three-to-one: 2014 buy 1y-into-2y receivers at 56bp premium K 1.45%, 1y roll-down 82bp, DV01 1.97, ratio 82 x 1.97 / 56 = 2.88 ("a fine replacement for long greens"); 2010 buy 1y x 1y ATM receiver, premium 47bp, roll-down 132bp, net 85bp with a stable Fed, max loss = premium, ratio 2.8:1. The alternative of selling the 1y x 1y ATM payer earns at most 47bp with unlimited terminal loss (Bassman, 16 Jul 2014; 21 Jan 2010). Context: 2y swap minus effective Fed funds averaged ~74bp since 1994 (~62bp since the GFC); the forward spread inverts before cuts with a lag (Bassman, 17 Jun 2019).
+- CMS 2s10s single-look quotes ($10,000/bp on 100mm): straddles 1y 30bp (K 28), 2y 38bp (K 30), 5y 48bp (K 31); caps 1y 15bp, 2y 19bp, 5y 24bp. Strikes are convexity-adjusted forwards. Spread options are cheapest when correlation is at its highs, i.e. when the curve is flat; "buying spread vol is the most levered way to purchase volatility" (Bassman, 8 Dec 2006).
+- Calendar cap spread (Citi, 25 Mar 2019): forward curve vol = sqrt(2 x (1y 2s10s vol)^2 - (6m 5s30s vol)^2), assuming beta ~1 between the two curves; buying 1y 2s10s and selling 6m 5s30s caps is long 6m-forward-6m 2s10s curve vol.
+
+## 5. Other 2017-2026 structures
+- 3m 2s5s bull flattener (Citi, 17 Feb 2023): sell $240mn 3m2y 15bp-OTM receiver, buy $100mn 3m5y 15bp-OTM payer, zero cost, DV01 $45k; vol and skew differentials give the pick-up vs forward.
+- 1y3y/1y3y1y bull steepener (Citi, 12 Mar 2018): zero-cost strike spread -7bp (strikes ATMF-15bp and -28bp); risk: 3y/3y1y slope inverts in a rally if cuts within a year are priced.
+- Costless 3m2y receiver ladder (Citi, 2 Oct 2026): buy $200mn ATMF, sell A-18 and A-36bp; net vega -$5.6k, DV01 $37,340; target $600k, stop -$300k; risk an SVB-type rally. Costless CMS cap ladder: buy $300mm 6m 10s/2s ATMF, sell $300mm each at +11bp and +22bp OTM; target $330k, stop -$200k; net curve vega -$5.5k; P&L -$76k (Citi, 13 Aug 2026). 3m 30s/2s CMS straddles vs selling +-21.5bp OTM strangles: +$290k (closed).
+- Aged EUR 2s5s bear steepener (Citi, 20 Aug 2026): expiry 16 Oct 2026, model value 1.7bp; rationale 2s5s has historically been less prone to bear-flattening than the long end; risk ECB over-tightening without second-round effects.
+- Conditional bull steepener on STIR futures-option call spreads vs mid-curve call spreads, receive ~2bp, better carry than the outright spread (JWS Macro, 21 Aug 2025).
+- Delta-hedged flatteners: GBP 15y10y/25y10y (Jan 2020) 50K DV01 at -11.2bp, 1y carry +0.52bp, BE 0 (carry positive), re-hedge every 25bp; USD 15y5y/20y10y (May 2019) curve -11.3bp at the top of its range since 2002, BE 1.3 vs 1y RV 3.0 (BE/RV 0.42, text carry -0.44bp vs table -0.31bp), chosen for tighter market; risk variable-annuity receiving in risk-off. Backtest ($100K DV01, yearly roll, 25bp hedge, daily avg return/vol/Sharpe $K): 10y10y/25y10y 5.40/247.6/0.35 best; 20y5y/25y10y 4.09/219.3/0.30; 15y5y/20y10y 2.92/251.5/0.18; 10y5y/15y15y 0.67/195.3/0.05 (Citi, 9 May 2019; 17 Jan 2020; 30 Mar 2020).
+- Forward-steepener BE/RV frontier (Citi, 12 Jun 2023, close 8 Jun; columns curve / 3y z / since-2000 z / 1y carry / BE / RV / BE/RV): 10y10y/15y15y -51.5 / -0.91 / -2.07 / 6.89 / 6.18 / 5.30 / 1.17; 10y10y/20y5y -62.4 / -0.91 / -1.47 / 10.31 / 7.22 / 5.24 / 1.38; 10y10y/20y10y -76.1 / -0.96 / -1.96 / 8.31 / 5.71 / 5.11 / 1.12; 10y10y/25y10y -105.6 / -1.04 / -2.56 / 6.04 / 3.97 / 4.66 / 0.85; 15y5y/20y5y -50.9 / -0.98 / -1.30 / 5.93 / 6.77 / 5.24 / 1.29; 15y5y/25y10y -94.1 / -1.11 / -2.58 / 1.66 / 2.29 / 4.66 / 0.49. Frontier: 10y10y/15y15y and 20y5y-10y10y.
+- Futures-option vs swaption spreads (Citi, 12 Dec 2016; 17 Jan 2017; 25 Sep 2019): swaption notional per 1,000 contracts; put/payer vol ratio column (e.g. 1.05 = 122.6 / 116.5 in 2026, call/receiver ratios 0.87-0.90 in Sep 2019); pick-up +2.3 to +5.7bp at 164-169 call strikes (Sep 2019).
+
+## 6. Per-market detail
+- USD: Formosa (Taiwan callable) issuance flattened the long end in 2017-2020; 30y tails cheapened post-election 2016 and were supported by lower Formosa supply in 2019; a new Taiwan rule (min 5y non-call) was argued to richen 30y vs 10y tails in 1-2y expiries (Citi, 9 Jan 2017; 17 Jan 2017; JPM, 21 Feb 2020). 5s30s implied correlation was at multi-year lows in 2023 (curve-cap demand); payer skews rebounded on range-breakout fears; short-dated receiver skew expected to outperform (Citi, 12 Jun 2023). Vol tends to decline in the months after the last hike (late 1970s, early 1980s), at risk from strong CPI and a hawkish 25bp hike.
+- EUR: 2s10s risk reversal ~2 sigma cheap on 1y history, 3m 1y/2y vol ratio near a 4-year high (2023); 1y2y vol expected to decline ~25bp of vol over 4y (Citi, 12 Jun 2023). 2s30s structured notes (EUR 13-20bn in 2007-2008) dislocated the EUR curve and short-tailed vol; dealer hedges reversed the forward-curve inversion (Bassman, 11 Jun 2008). 10s30s vol rich vs realised and 5y/7y tails rich on PCA in 2020; 5y5y/10y10y mid-curves cheap to swaptions (Citi, 17 Jan 2020; 30 Mar 2020). 2s5s/2s10s at 2-5y expiries rich on PCA in Sep 2026 (Citi, 14 Sep 2026). Forward vols were led lower in 2019, well above JPY (Citi, 25 Mar 2019).
+- GBP: lowest BE/RV ratios (0.00-0.89 across curves, several 0.00 because carry is positive), since-2000 z-scores 1.1-1.8 in 2020; delta-hedged 15y10y/25y10y flatteners profited as BoE QE flattened the curve (Citi, 17 Jan 2020; 30 Mar 2020). Closed SONIA conditional log: "pay 3m10s30s conditional bearish" +1, "3m 2s5s10s conditional bear tightener" +11, "6m 2s10s bear steepener at zero cost" stopped at -16 (Citi, 1 Oct 2026).
+- JPY: after the 2016 curve-control announcement 1y2y/1y10y vols collapsed; JPY BE/RV 0.76-1.50 (2020); conditional structures carry policy-regime risk. In the Huggins JPY example (18 Jun 2012) receiver conditionality was favoured because a BoJ hike was unlikely, a single-underlying breakeven case, not a curve trade (Huggins & Schaller, 2024, Ch.19; Citi, 30 Mar 2020).
+- CAD: BE/RV 0.45-1.82 across curves (2020) (Citi, 17 Jan 2020). AUD: premium-neutral USD vs AUD 3Mx2Y ATMF payers (JPM, 3 Aug 2018). NZD, CHF, SEK, NOK: no material in the sources.
+
+## 7. Macro-vol selection residuals and structural drivers
+- Macro-vol residual: regress each ATM swaption vol on 3 PCs of the swap curve; residual = rich/cheap with z-score; exclude ZIRP (USD) and pre-2016 (EUR). PCA of curve vols: 2 PCs, 3y of data; of the vol surface: 3 PCs, 2y of data; relative value only, never a level call (Citi, 14 Jan 2019; 9 May 2019; 17 Jan 2020).
+- Vol beta across tails: the ratio of 1y2y to 1y10y vol vs its average; sharp ratio rises usually come with a rise in vol level, so a ratio move without a level move is an anomaly (Bassman, 8 Dec 2006).
+- Variable-annuity and insurer flows concentrate in 15-25y; in risk-off VA duration extends and insurers receive ~20y, steepening beyond 20y (Citi, 9 May 2019; 30 Mar 2020).
+- Daily move-type frequencies for 2s10s (BofA, 23 Jul 2025; bull-steep / bear-flat / bull-flat / bear-steep): 2w 11/13/32/44%, 1m 19/23/24/34%, 2m 23/18/33/27%, 3m 20/20/30/30%; the sum of bull-steepening and bear-flattening frequencies gauges the Fed's footprint on curve dynamics. Citi (20 Aug 2026) reads positive pick-up to spot for bear steepeners as flattening still being the modal scenario in bearish duration regimes.
+- Hedge time of day changes realised vol of any delta-hedged alternative: USD 9am lowest, 12pm highest (Jan 2020); EUR 2pm lowest, 8am highest; 5pm highest in USD in May 2019 (Citi, 17 Jan 2020; 9 May 2019). Hedging daily is optimal only when bid/offer is small; thresholds beat daily hedging only at higher costs (Citi, 12 Mar 2018).

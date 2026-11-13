@@ -1,0 +1,11 @@
+# Core (required by skill scripts)
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+pyyaml>=6.0          # tools/check_skills.py
+# Optional (scripts guard these imports)
+statsmodels>=0.14    # ADF/KPSS, cointegration, Markov switching, HAC
+scikit-learn>=1.4    # ML skills, Ledoit-Wolf
+matplotlib>=3.8      # charts
+pyarrow>=14          # parquet canonical tables
+# Optional pricing back-ends (never required): QuantLib; rateslib (source-available, non-commercial default licence)
